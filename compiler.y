@@ -158,26 +158,22 @@ ShiftExpr : AdditiveExpr
           | ShiftExpr SHL AdditiveExpr { printf("SHL\n"); }
           | ShiftExpr SHR AdditiveExpr { printf("SHR\n"); }
           ;
-AdditiveExpr : MultiplicativeExpr
-             | AdditiveExpr ADD MultiplicativeExpr { printf("ADD\n"); /*TODO: 填入相加的值像是 $ = $1 + $3;，參考：https://cse.iitkgp.ac.in/~bivasm/notes/LexAndYaccTutorial.pdf*/}
-             | AdditiveExpr SUB MultiplicativeExpr { printf("SUB\n"); }
+AdditiveExpr : UnaryExpr
+             | AdditiveExpr ADD UnaryExpr { printf("ADD\n"); /*TODO: 填入相加的值像是 $ = $1 + $3;，參考：https://cse.iitkgp.ac.in/~bivasm/notes/LexAndYaccTutorial.pdf*/}
+             | AdditiveExpr SUB UnaryExpr { printf("SUB\n"); }
              ;
 
-MultiplicativeExpr : UnaryExpr
+UnaryExpr : MultiplicativeExpr
+          | NOT UnaryExpr { printf("NOT\n"); }
+          | BNT UnaryExpr { printf("BNT\n"); }
+          | SUB UnaryExpr { printf("NEG\n"); }
+          ;
+    
+MultiplicativeExpr : PostfixExpr
                    | MultiplicativeExpr MUL UnaryExpr { printf("MUL\n"); }
                    | MultiplicativeExpr DIV UnaryExpr { printf("DIV\n"); }
                    | MultiplicativeExpr REM UnaryExpr { printf("REM\n"); }
                    ;
-
-UnaryExpr : PostfixExpr
-          | NOT UnaryExpr { printf("NOT\n"); }
-          | BNT UnaryExpr { printf("BNT\n"); }
-          | SUB UnaryExpr { printf("NEG\n"); }
-          /* | ADD UnaryExpr { printf("POSITIVE\n"); }
-          | BAN UnaryExpr { printf("ADDRESS_OF\n"); }
-          | MUL UnaryExpr { printf("DEREFERENCE\n"); }
-          | "sizeof" UnaryExpr { printf("SIZEOF\n"); } */
-          ;
 
 PostfixExpr : PrimaryExpr
             | PostfixExpr INC_ASSIGN { printf("INC_ASSIGN\n"); }
