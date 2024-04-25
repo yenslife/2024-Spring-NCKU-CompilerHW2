@@ -114,7 +114,9 @@ CoutParmListStmt
 
 /* Expression, expression count +1 */
 /* 記得處理先乘除後加減，以及括號 */
-Expression : ConditionalExpr { /* do nothing */ }
+Expression : Primary
+           | '(' ConditionalExpr ')' { /* do nothing */ }
+           | ConditionalExpr { /* do nothing */ }
            ;
 
 ConditionalExpr : LogicalOrExpr
@@ -153,11 +155,11 @@ RelationalExpr : ShiftExpr
                | RelationalExpr GEQ ShiftExpr { printf("GEQ\n"); }
                ;
 ShiftExpr : AdditiveExpr
-          /* | ShiftExpr SHL AdditiveExpr { printf("SHL\n"); }
-          | ShiftExpr SHR AdditiveExpr { printf("SHR\n"); } */
+          | ShiftExpr SHL AdditiveExpr { printf("SHL\n"); }
+          | ShiftExpr SHR AdditiveExpr { printf("SHR\n"); }
           ;
 AdditiveExpr : MultiplicativeExpr
-             | AdditiveExpr ADD MultiplicativeExpr { printf("ADD\n"); }
+             | AdditiveExpr ADD MultiplicativeExpr { printf("ADD\n"); /*TODO: 填入相加的值像是 $ = $1 + $3;，參考：https://cse.iitkgp.ac.in/~bivasm/notes/LexAndYaccTutorial.pdf*/}
              | AdditiveExpr SUB MultiplicativeExpr { printf("SUB\n"); }
              ;
 
