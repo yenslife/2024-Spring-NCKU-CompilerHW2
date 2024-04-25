@@ -38,6 +38,20 @@
 /* Nonterminal with return, which need to sepcify type */
 %type <object_val> Expression
 %type <object_val> Primary
+%type <object_val> LogicalOrExpr
+%type <object_val> LogicalAndExpr
+%type <object_val> InclusiveOrExpr
+%type <object_val> ExclusiveOrExpr
+%type <object_val> AndExpr
+%type <object_val> EqualityExpr
+%type <object_val> RelationalExpr
+%type <object_val> ShiftExpr
+%type <object_val> AdditiveExpr
+%type <object_val> UnaryExpr
+%type <object_val> MultiplicativeExpr
+%type <object_val> PostfixExpr
+%type <object_val> PrimaryExpr
+
 
 %left ADD SUB
 %left MUL DIV REM
@@ -95,7 +109,7 @@ StmtList
 ;
 Stmt
     : ';'
-    | COUT CoutParmListStmt ';' { stdoutPrint(); }
+    | COUT {init_cout_list();} CoutParmListStmt ';' { stdoutPrint(); }
     | RETURN Expression ';' { printf("RETURN\n"); }
     | DefineVariableStmt
     | AssignVariableStmt
@@ -114,9 +128,9 @@ CoutParmListStmt
 
 /* Expression, expression count +1 */
 /* 記得處理先乘除後加減，以及括號 */
-Expression : Primary
-           | '(' ConditionalExpr ')' { /* do nothing */ }
-           | ConditionalExpr { /* do nothing */ }
+Expression : Primary { $$ = $<object_val>1;}
+           | '(' ConditionalExpr ')' { $$ = $<object_val>2; }
+           | ConditionalExpr { $$ = $<object_val>1;}
            ;
 
 ConditionalExpr : LogicalOrExpr
@@ -124,64 +138,66 @@ ConditionalExpr : LogicalOrExpr
                 ;
 
 LogicalOrExpr : LogicalAndExpr
-              | LogicalOrExpr LOR LogicalAndExpr { printf("LOR\n"); }
+              | LogicalOrExpr LOR LogicalAndExpr { printf("LOR\n"); $<object_val>1.value = $<object_val>1.value || $<object_val>3.value; $$ = $<object_val>1;}
               ;
 
 LogicalAndExpr : InclusiveOrExpr
-               | LogicalAndExpr LAN InclusiveOrExpr { printf("LAN\n"); }
+               | LogicalAndExpr LAN InclusiveOrExpr { printf("LAN\n"); $<object_val>1.value = $<object_val>1.value && $<object_val>3.value; $$ = $<object_val>1;}
                ;
 
 InclusiveOrExpr : ExclusiveOrExpr
-                | InclusiveOrExpr BOR ExclusiveOrExpr { printf("BOR\n"); }
+                | InclusiveOrExpr BOR ExclusiveOrExpr { printf("BOR\n"); $<object_val>1.value = $<object_val>1.value | $<object_val>3.value; $$ = $<object_val>1;}
                 ;
 
 ExclusiveOrExpr : AndExpr
-                | ExclusiveOrExpr BXO AndExpr { printf("BXO\n"); }
+                | ExclusiveOrExpr BXO AndExpr { printf("BXO\n"); $<object_val>1.value = $<object_val>1.value ^ $<object_val>3.value; $$ = $<object_val>1;}
                 ;
 
 AndExpr : EqualityExpr
-        | AndExpr BAN EqualityExpr { printf("BAN\n"); }
+        | AndExpr BAN EqualityExpr { printf("BAN\n"); $<object_val>1.value = $<object_val>1.value & $<object_val>3.value; $$ = $<object_val>1;}
         ;
 
 EqualityExpr : RelationalExpr
-             | EqualityExpr EQL RelationalExpr { printf("EQL\n"); }
-             | EqualityExpr NEQ RelationalExpr { printf("NEQ\n"); }
+             | EqualityExpr EQL RelationalExpr { printf("EQL\n"); $<object_val>1.value = $<object_val>1.value == $<object_val>3.value; $$ = $<object_val>1;}
+             | EqualityExpr NEQ RelationalExpr { printf("NEQ\n"); $<object_val>1.value = $<object_val>1.value != $<object_val>3.value; $$ = $<object_val>1;}
              ;
 
 RelationalExpr : ShiftExpr
-               | RelationalExpr LES ShiftExpr { printf("LES\n"); }
-               | RelationalExpr LEQ ShiftExpr { printf("LEQ\n"); }
-               | RelationalExpr GTR ShiftExpr { printf("GTR\n"); }
-               | RelationalExpr GEQ ShiftExpr { printf("GEQ\n"); }
+               | RelationalExpr LES ShiftExpr { printf("LES\n"); $<object_val>1.value = $<object_val>1.value < $<object_val>3.value; $$ = $<object_val>1;}
+               | RelationalExpr LEQ ShiftExpr { printf("LEQ\n"); $<object_val>1.value = $<object_val>1.value <= $<object_val>3.value; $$ = $<object_val>1;}
+               | RelationalExpr GTR ShiftExpr { printf("GTR\n"); $<object_val>1.value = $<object_val>1.value > $<object_val>3.value; $$ = $<object_val>1;}
+               | RelationalExpr GEQ ShiftExpr { printf("GEQ\n"); $<object_val>1.value = $<object_val>1.value >= $<object_val>3.value; $$ = $<object_val>1;}
                ;
+
 ShiftExpr : AdditiveExpr
-          | ShiftExpr SHL AdditiveExpr { printf("SHL\n"); }
-          | ShiftExpr SHR AdditiveExpr { printf("SHR\n"); }
+          | ShiftExpr SHL AdditiveExpr { printf("SHL\n"); $<object_val>1.value = $<object_val>1.value << $<object_val>3.value; $$ = $<object_val>1;}
+          | ShiftExpr SHR AdditiveExpr { printf("SHR\n"); $<object_val>1.value = $<object_val>1.value >> $<object_val>3.value; $$ = $<object_val>1;}
           ;
+
 AdditiveExpr : UnaryExpr
-             | AdditiveExpr ADD UnaryExpr { printf("ADD\n"); /*TODO: 填入相加的值像是 $ = $1 + $3;，參考：https://cse.iitkgp.ac.in/~bivasm/notes/LexAndYaccTutorial.pdf*/}
-             | AdditiveExpr SUB UnaryExpr { printf("SUB\n"); }
+             | AdditiveExpr ADD UnaryExpr { printf("ADD\n"); $<object_val>1.value = $<object_val>1.value + $<object_val>3.value; $$ = $<object_val>1;}
+             | AdditiveExpr SUB UnaryExpr { printf("SUB\n"); $<object_val>1.value = $<object_val>1.value - $<object_val>3.value; $$ = $<object_val>1;}
              ;
 
 UnaryExpr : MultiplicativeExpr
-          | NOT UnaryExpr { printf("NOT\n"); }
-          | BNT UnaryExpr { printf("BNT\n"); }
-          | SUB UnaryExpr { printf("NEG\n"); }
+          | NOT UnaryExpr { printf("NOT\n"); $<object_val>2.value = !$<object_val>2.value; $$ = $<object_val>2;}
+          | BNT UnaryExpr { printf("BNT\n"); $<object_val>2.value = ~$<object_val>2.value; $$ = $<object_val>2;}
+          | SUB UnaryExpr { printf("NEG\n"); $<object_val>2.value = -$<object_val>2.value; $$ = $<object_val>2;}
           ;
     
 MultiplicativeExpr : PostfixExpr
-                   | MultiplicativeExpr MUL UnaryExpr { printf("MUL\n"); }
-                   | MultiplicativeExpr DIV UnaryExpr { printf("DIV\n"); }
-                   | MultiplicativeExpr REM UnaryExpr { printf("REM\n"); }
+                   | MultiplicativeExpr MUL UnaryExpr { printf("MUL\n"); $<object_val>1.value = $<object_val>1.value * $<object_val>3.value; $$ = $<object_val>1;}
+                   | MultiplicativeExpr DIV UnaryExpr { printf("DIV\n"); $<object_val>1.value = $<object_val>1.value / $<object_val>3.value; $$ = $<object_val>1;}
+                   | MultiplicativeExpr REM UnaryExpr { printf("REM\n"); $<object_val>1.value = $<object_val>1.value % $<object_val>3.value; $$ = $<object_val>1;}
                    ;
 
 PostfixExpr : PrimaryExpr
-            | PostfixExpr INC_ASSIGN { printf("INC_ASSIGN\n"); }
-            | PostfixExpr DEC_ASSIGN { printf("DEC_ASSIGN\n"); }
+            | PostfixExpr INC_ASSIGN { printf("INC_ASSIGN\n"); $<object_val>1.value = $<object_val>1.value + 1; $$ = $<object_val>1;}
+            | PostfixExpr DEC_ASSIGN { printf("DEC_ASSIGN\n"); $<object_val>1.value = $<object_val>1.value - 1; $$ = $<object_val>1;}
             ;
 
-PrimaryExpr : Primary { /* do nothing */}
-            | '(' Expression ')' { /* do nothing */}
+PrimaryExpr : Primary { $$ = $<object_val>1;}
+            | '(' Expression ')' { $$ = $<object_val>2;}
             ;
 
 
@@ -199,11 +215,34 @@ Factor     : Primary
 
 
 Primary
-    : STR_LIT { $$.type = OBJECT_TYPE_STR;  /* $$ 表示這個非終端符號的值 */
-                $$.value = (uint64_t) $<s_var>1; 
+    : STR_LIT { 
+                // $$.type = OBJECT_TYPE_STR;  /* $$ 表示這個非終端符號的值 */
+                // $$.value = (uint64_t) $<s_var>1; 
+                /* create variable */
+                Object* obj = createVariable(OBJECT_TYPE_STR, $<s_var>1, VAR_FLAG_DEFAULT);
+                // printf("value=%s\n", (char *) $$.value);
+                /* copy obj to $$ */
+                obj->value = (uint64_t) $<s_var>1;
+                obj->type = OBJECT_TYPE_STR;
+                free(obj->symbol);
+                obj->symbol = NULL;
+                $$ = *obj;
+                $<object_val>1 = *obj;
                 printf("STR_LIT \"%s\"\n", (char *) $$.value); }
-    | INT_LIT { $$.type = OBJECT_TYPE_INT; 
-                $$.value = $<i_var>1; 
+    | INT_LIT { 
+                // $$.type = OBJECT_TYPE_INT; 
+                // $$.value = $<i_var>1; 
+                Object* obj = createVariable(OBJECT_TYPE_INT, "NULL", VAR_FLAG_DEFAULT);
+                obj->value = $<i_var>1;
+                obj->type = OBJECT_TYPE_INT;
+                // free(obj->symbol->name);
+                // free(obj->symbol->func_sig);
+                free(obj->symbol);
+                obj->symbol = NULL;
+                $$ = *obj;
+                // $<object_val>1 = *obj;
+                // printf("value=%lu\n", $<i_var>1);
+                // printf("INT_LIT type:%d, value:%ld\n", obj->type, obj->value);
                 printf("INT_LIT %lu\n", $$.value);
                 // convert int $<i_var>1 to string
                 // char *str = (char *) malloc(32);
@@ -211,11 +250,28 @@ Primary
                 // Object* obj = createVariable(OBJECT_TYPE_STR, str, VAR_FLAG_DEFAULT);
                 // $$ = *obj;
                 }
-    | FLOAT_LIT { $$.type = OBJECT_TYPE_FLOAT; 
-                    $$.value = (uint64_t) $<f_var>1; 
+    | FLOAT_LIT { 
+                    // $$.type = OBJECT_TYPE_FLOAT; 
+                    // $$.value = (uint64_t) $<f_var>1; 
+                    Object* obj = createVariable(OBJECT_TYPE_FLOAT, "NULL", VAR_FLAG_DEFAULT);
+                    obj->value = (uint64_t) $<f_var>1;
+                    obj->type = OBJECT_TYPE_FLOAT;
+                    free(obj->symbol);
+                    obj->symbol = NULL;
+                    $$ = *obj;
+                    // printf("value=%f\n",(float) $$.value);
                     printf("FLOAT_LIT %f\n", $<f_var>1);}
-    | BOOL_LIT { $$.type = OBJECT_TYPE_BOOL;
-                    $$.value = $<b_var>1; 
+    | BOOL_LIT { 
+                    // $$.type = OBJECT_TYPE_BOOL;
+                    // $$.value = $<b_var>1; 
+                    Object* obj = createVariable(OBJECT_TYPE_BOOL, "NULL", VAR_FLAG_DEFAULT);
+                    // printf("value=%d\n", $<b_var>1);
+                    obj->value = $<b_var>1;
+                    obj->type = OBJECT_TYPE_BOOL;
+                    obj->symbol = NULL;
+                    free(obj->symbol);
+                    obj->symbol = NULL;
+                    $$ = *obj;
                     if ($<b_var>1) {
                         printf("BOOL_LIT TRUE\n");
                     } else {
@@ -231,9 +287,12 @@ Primary
                     obj->symbol->addr = -1;
                 }
                 $$ = *obj;
+                $$.type = obj->type;
+                $$.value = obj->value;
+                // printf("IDENT type=%d, value=%ld\n", obj->type, obj->value);
                 printf("IDENT (name=%s, address=%ld)\n", obj->symbol->name, obj->symbol->addr);
                 }
-    | IDENT '[' Expression ']'
+    /* | IDENT '[' Expression ']' */
 ;
 %%
 /* C code section */
