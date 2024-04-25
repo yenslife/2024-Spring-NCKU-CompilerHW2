@@ -114,23 +114,80 @@ CoutParmListStmt
 
 /* Expression, expression count +1 */
 /* 記得處理先乘除後加減，以及括號 */
-Expression : RelationalExpr
-           | Expression ADD RelationalExpr { printf("ADD\n"); }
-           | Expression SUB RelationalExpr { printf("SUB\n"); }
+Expression : ConditionalExpr { /* do nothing */ }
            ;
 
-RelationalExpr : Term
-               | RelationalExpr GTR Term { printf("GTR\n");}
-               | RelationalExpr LES Term { printf("LES\n");}
-               | RelationalExpr EQL Term { printf("EQL\n");}
-               | RelationalExpr NEQ Term { printf("NEQ\n");}
-               | RelationalExpr GEQ Term { printf("GEQ\n");}
-               | RelationalExpr LEQ Term { printf("LEQ\n");}
-               | RelationalExpr LAN Term { printf("LAN\n");}
-               | RelationalExpr LOR Term { printf("LOR\n");}
+ConditionalExpr : LogicalOrExpr
+                | LogicalOrExpr '?' Expression ':' ConditionalExpr { printf("TERNARY\n"); }
+                ;
+
+LogicalOrExpr : LogicalAndExpr
+              | LogicalOrExpr LOR LogicalAndExpr { printf("LOR\n"); }
+              ;
+
+LogicalAndExpr : InclusiveOrExpr
+               | LogicalAndExpr LAN InclusiveOrExpr { printf("LAN\n"); }
                ;
 
-Term       : Factor
+InclusiveOrExpr : ExclusiveOrExpr
+                | InclusiveOrExpr BOR ExclusiveOrExpr { printf("BOR\n"); }
+                ;
+
+ExclusiveOrExpr : AndExpr
+                | ExclusiveOrExpr BXO AndExpr { printf("BXO\n"); }
+                ;
+
+AndExpr : EqualityExpr
+        | AndExpr BAN EqualityExpr { printf("BAN\n"); }
+        ;
+
+EqualityExpr : RelationalExpr
+             | EqualityExpr EQL RelationalExpr { printf("EQL\n"); }
+             | EqualityExpr NEQ RelationalExpr { printf("NEQ\n"); }
+             ;
+
+RelationalExpr : ShiftExpr
+               | RelationalExpr LES ShiftExpr { printf("LES\n"); }
+               | RelationalExpr LEQ ShiftExpr { printf("LEQ\n"); }
+               | RelationalExpr GTR ShiftExpr { printf("GTR\n"); }
+               | RelationalExpr GEQ ShiftExpr { printf("GEQ\n"); }
+               ;
+ShiftExpr : AdditiveExpr
+          /* | ShiftExpr SHL AdditiveExpr { printf("SHL\n"); }
+          | ShiftExpr SHR AdditiveExpr { printf("SHR\n"); } */
+          ;
+AdditiveExpr : MultiplicativeExpr
+             | AdditiveExpr ADD MultiplicativeExpr { printf("ADD\n"); }
+             | AdditiveExpr SUB MultiplicativeExpr { printf("SUB\n"); }
+             ;
+
+MultiplicativeExpr : UnaryExpr
+                   | MultiplicativeExpr MUL UnaryExpr { printf("MUL\n"); }
+                   | MultiplicativeExpr DIV UnaryExpr { printf("DIV\n"); }
+                   | MultiplicativeExpr REM UnaryExpr { printf("REM\n"); }
+                   ;
+
+UnaryExpr : PostfixExpr
+          | NOT UnaryExpr { printf("NOT\n"); }
+          | BNT UnaryExpr { printf("BNT\n"); }
+          | SUB UnaryExpr { printf("NEG\n"); }
+          /* | ADD UnaryExpr { printf("POSITIVE\n"); }
+          | BAN UnaryExpr { printf("ADDRESS_OF\n"); }
+          | MUL UnaryExpr { printf("DEREFERENCE\n"); }
+          | "sizeof" UnaryExpr { printf("SIZEOF\n"); } */
+          ;
+
+PostfixExpr : PrimaryExpr
+            | PostfixExpr INC_ASSIGN { printf("INC_ASSIGN\n"); }
+            | PostfixExpr DEC_ASSIGN { printf("DEC_ASSIGN\n"); }
+            ;
+
+PrimaryExpr : Primary { /* do nothing */}
+            | '(' Expression ')' { /* do nothing */}
+            ;
+
+
+/* Term       : Factor
            | Term MUL Factor { printf("MUL\n"); }
            | Term DIV Factor { printf("DIV\n"); }
            | Term REM Factor { printf("REM\n"); }
@@ -138,9 +195,9 @@ Term       : Factor
 
 Factor     : Primary
            | '(' Expression ')'
-           | SUB Factor %prec UMINUS { printf("NEG\n"); } /* Unary minus 待研究 */
+           | SUB Factor %prec UMINUS { printf("NEG\n"); } 
            | NOT Factor { printf("NOT\n"); }
-           ;
+           ; */
 
 
 Primary
