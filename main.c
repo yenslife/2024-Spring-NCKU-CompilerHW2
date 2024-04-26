@@ -51,12 +51,20 @@ void dumpScope() {
     scopeLevel--;
 }
 
+void init_cout_list() {
+    // printf("cout init\n");
+    struct list_head *head = scopeList[++scopeLevel] = malloc(sizeof(struct list_head));
+    INIT_LIST_HEAD(head);
+}
+
 Object* createVariable(ObjectType variableType, char* variableName, int variableFlag) {
     Object *variable = malloc(sizeof(Object));
     variable->type = variableType;
+    // printf("variableType: %d\n", variableType);
     variable->symbol = malloc(sizeof(SymbolData));
     variable->symbol->name = variableName;
     variable->symbol->addr = variableAddress++;
+    INIT_LIST_HEAD(&variable->list);
     if (!strcmp(variableName, "endl")) {
         variable->symbol->addr = -1;
         variableAddress--;
@@ -82,7 +90,14 @@ void pushFunParm(ObjectType variableType, char* variableName, int variableFlag) 
     variable->symbol->func_sig = "-";
     variable->symbol->func_var = 0;
     // put into symbol table
+    // printf("before add, check scopeLevel:%d(pushFunParm)\n", scopeLevel);
     list_add_tail(&variable->list, scopeList[scopeLevel]);
+    // /*印出目前所有的 type*/
+    // printf("印出目前所有的 type(pushFunParm) 在 scopeLevel:%d\n", scopeLevel);
+    // list_for_each(pos, scopeList[scopeLevel]) {
+    //     variable = list_entry(pos, Object, list);
+    //     printf("type %d\n", variable->type);
+    // }
 }
 
 void createFunction(ObjectType variableType, char* funcName) {
@@ -96,6 +111,7 @@ void createFunction(ObjectType variableType, char* funcName) {
     variable->symbol->addr = -1;
     variableAddress = 0;
     // put into symbol table
+    // printf("before add, check scopeLevel:%d(createFunction)\n", scopeLevel);
     list_add_tail(&variable->list, scopeList[scopeLevel]);
 }
 
@@ -147,48 +163,107 @@ bool objectCast(ObjectType variableType, Object* dest, Object* out) {
 
 Object* findVariable(char* variableName) {
     /* 在 symbol table 中找到 variableName */
-    struct list_head *pos;
-    Object *variable;
-    for (int i = scopeLevel; i >= 0; i--) {
-        list_for_each(pos, scopeList[i]) {
-            variable = list_entry(pos, Object, list);
-            if (!strcmp(variable->symbol->name, variableName)) {
-                printf("test found %s\n", variable->symbol->name);
-                return variable;
-            }
-        }
-    }
+    // struct list_head *pos;
+    // Object *variable;
+    // for (int i = scopeLevel; i >= 0; i--) {
+    //     list_for_each(pos, scopeList[i]) {
+    //         variable = list_entry(pos, Object, list);
+    //         if (!strcmp(variable->symbol->name, variableName)) {
+    //             printf("test found %s\n", variable->symbol->name);
+    //             return variable;
+    //         }
+    //     }
+    // }
     return NULL;
 }
 
 void pushFunInParm(Object* variable) {
-    // printf("this is pushFunInParm name:%d\n", variable->value);
+    // printf("this is pushFunInParm value:%s\n", (char *)variable->value);
     // printf("this is pushFunInParm\n");
+    // printf("xtype %d\n", variable->type);
     if (variable->symbol){
         // printf("IDENT (name=%s, address=%ld)\n", variable->symbol->name, variable->symbol->addr);
+        if (!strcmp(variable->symbol->name, "endl")) {
+            // printf("endl\n");
+            Object *new_obj = malloc(sizeof(Object));
+            new_obj->type = OBJECT_TYPE_STR;
+            new_obj->value = (uint64_t)strdup("endl");
+            INIT_LIST_HEAD(&new_obj->list);
+            list_add_tail(&new_obj->list, scopeList[scopeLevel]);
+            return;
+        }
     } else if (variable->type == OBJECT_TYPE_INT) {
         // printf("INT_LIT %ld\n", variable->value);
-        printf("int ");
+        // printf("!!!int value:%ld\n", variable->value);
     } else if (variable->type == OBJECT_TYPE_FLOAT) {
-        printf("float ");
+        // printf("!!!float value:%ld\n", variable->value);
     } else if (variable->type == OBJECT_TYPE_BOOL) {
-        printf("bool ");
+        // printf("!!!bool value:%ld\n", variable->value); 
     } else if (variable->type == OBJECT_TYPE_STR) {
+        // printf("str\n");
         // printf("STR_LIT \"%s\"\n", (char *)variable->value);
     } else {
-        // printf("UNDEFINED\n");
+        printf("wtf\n");
     }
+    // if (variable->list)
+    //     printf("NULL\n");
+
+    // printf("before add, check scopeLevel:%d(pushFunInParm)\n", scopeLevel);
+    // printf("variable type %d\n", variable->type);
+    
+    Object *new_obj = createVariable(variable->type, "NULL", VAR_FLAG_DEFAULT);
+    new_obj->value = variable->value;
+    // new_obj->type = variable->type;
+    // new_obj->value = variable->value;
+    INIT_LIST_HEAD(&new_obj->list);
+    // free(variable);
+
+    list_add_tail(&new_obj->list, scopeList[scopeLevel]);
+    // list_add(&variable->list, scopeList[scopeLevel]);
+
     // 將 Parm 數量 +1
     indent++;
 }
 
 void stdoutPrint() {
+    // printf("開始 stdoutPrint\n");
     printf("cout");
-    for (int i = 0; i < indent; i++) {
-        printf(" string"); /* TODO: 印出的值不一定是 string
-                                    要從 table 裡面找 */
+    // for (int i = 0; i < indent; i++) {
+    //     printf(" string"); /* TODO: 印出的值不一定是 string
+    //                                 要從 table 裡面找 */
+    // }
+    // printf("\n");
+    struct list_head *pos;
+    Object *variable;
+    list_for_each(pos, scopeList[scopeLevel]) {
+        variable = list_entry(pos, Object, list);
+        // printf("value:%ld\n", variable->value);
+        // printf("type:%d\n", variable->type);
+        if (variable->type == OBJECT_TYPE_INT) {
+            printf(" int");
+        } else if (variable->type == OBJECT_TYPE_FLOAT) {
+            printf(" float");
+        } else if (variable->type == OBJECT_TYPE_BOOL) {
+            printf(" bool");
+        } else if (variable->type == OBJECT_TYPE_STR) {
+            printf(" string");
+        } else {
+            printf(" undefined");
+        }
     }
+    // printf("結束 stdoutPrint\n");
+    
+    /* remove all Parm on cout level */
+    struct list_head *q;
+    list_for_each_safe(pos, q, scopeList[scopeLevel]) {
+        variable = list_entry(pos, Object, list);
+        list_del(pos);
+        free(variable);
+    }
+    
     printf("\n");
+    indent = 0;
+    scopeLevel--;
 }
 
 int main(int argc, char* argv[]) {
