@@ -112,13 +112,6 @@ Stmt
     | COUT {init_cout_list();} CoutParmListStmt ';' { stdoutPrint(); }
     | RETURN Expression ';' { printf("RETURN\n"); }
     | DefineVariableStmt
-    | AssignVariableStmt
-;
-
-/* assigned variable */
-AssignVariableStmt
-    : /*IDENT VAL_ASSIGN Expression { printf("AssignVariableStmt\n"); } ';'*/
-    /* | IDENT ADD_ASSIGN Expression { printf("AssignVariableStmt\n"); } ';' */
 ;
 
 CoutParmListStmt
@@ -128,8 +121,7 @@ CoutParmListStmt
 
 /* Expression, expression count +1 */
 /* 記得處理先乘除後加減，以及括號 */
-Expression : Primary { $$ = $<object_val>1;}
-           | '(' ConditionalExpr ')' { $$ = $<object_val>2; }
+Expression : '(' ConditionalExpr ')' { $$ = $<object_val>2; }
            | ConditionalExpr { $$ = $<object_val>1;}
            ;
 
@@ -196,8 +188,8 @@ PostfixExpr : PrimaryExpr
             | PostfixExpr DEC_ASSIGN { printf("DEC_ASSIGN\n"); $<object_val>1.value = $<object_val>1.value - 1; $$ = $<object_val>1;}
             ;
 
-PrimaryExpr : Primary { $$ = $<object_val>1;}
-            | '(' Expression ')' { $$ = $<object_val>2;}
+PrimaryExpr : '(' Expression ')' { $$ = $<object_val>2;}
+            | Primary { $$ = $<object_val>1;} 
             ;
 
 
