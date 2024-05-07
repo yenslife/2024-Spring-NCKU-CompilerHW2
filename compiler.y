@@ -154,34 +154,36 @@ EqualityExpr : RelationalExpr
              | EqualityExpr NEQ RelationalExpr { printf("NEQ\n"); $<object_val>1.value = $<object_val>1.value != $<object_val>3.value; $$ = $<object_val>1;}
              ;
 
-RelationalExpr : ShiftExpr
-               | RelationalExpr LES ShiftExpr { printf("LES\n"); $<object_val>1.value = $<object_val>1.value < $<object_val>3.value; $$ = $<object_val>1;}
-               | RelationalExpr LEQ ShiftExpr { printf("LEQ\n"); $<object_val>1.value = $<object_val>1.value <= $<object_val>3.value; $$ = $<object_val>1;}
-               | RelationalExpr GTR ShiftExpr { printf("GTR\n"); $<object_val>1.value = $<object_val>1.value > $<object_val>3.value; $$ = $<object_val>1;}
-               | RelationalExpr GEQ ShiftExpr { printf("GEQ\n"); $<object_val>1.value = $<object_val>1.value >= $<object_val>3.value; $$ = $<object_val>1;}
+RelationalExpr : AdditiveExpr
+               | RelationalExpr LES AdditiveExpr { printf("LES\n"); $<object_val>1.value = $<object_val>1.value < $<object_val>3.value; $$ = $<object_val>1;}
+               | RelationalExpr LEQ AdditiveExpr { printf("LEQ\n"); $<object_val>1.value = $<object_val>1.value <= $<object_val>3.value; $$ = $<object_val>1;}
+               | RelationalExpr GTR AdditiveExpr { printf("GTR\n"); $<object_val>1.value = $<object_val>1.value > $<object_val>3.value; $$ = $<object_val>1;}
+               | RelationalExpr GEQ AdditiveExpr { printf("GEQ\n"); $<object_val>1.value = $<object_val>1.value >= $<object_val>3.value; $$ = $<object_val>1;}
                ;
 
-ShiftExpr : AdditiveExpr
+/* ShiftExpr : AdditiveExpr
           | ShiftExpr SHL AdditiveExpr { printf("SHL\n"); $<object_val>1.value = $<object_val>1.value << $<object_val>3.value; $$ = $<object_val>1;}
           | ShiftExpr SHR AdditiveExpr { printf("SHR\n"); $<object_val>1.value = $<object_val>1.value >> $<object_val>3.value; $$ = $<object_val>1;}
-          ;
+          ; */
 
-AdditiveExpr : UnaryExpr
-             | AdditiveExpr ADD UnaryExpr { printf("ADD\n"); $<object_val>1.value = $<object_val>1.value + $<object_val>3.value; $$ = $<object_val>1;}
-             | AdditiveExpr SUB UnaryExpr { printf("SUB\n"); $<object_val>1.value = $<object_val>1.value - $<object_val>3.value; $$ = $<object_val>1;}
+AdditiveExpr : MultiplicativeExpr
+             | AdditiveExpr ADD MultiplicativeExpr { printf("ADD\n"); $<object_val>1.value = $<object_val>1.value + $<object_val>3.value; $$ = $<object_val>1;}
+             | AdditiveExpr SUB MultiplicativeExpr { printf("SUB\n"); $<object_val>1.value = $<object_val>1.value - $<object_val>3.value; $$ = $<object_val>1;}
              ;
 
-UnaryExpr : MultiplicativeExpr
+MultiplicativeExpr : UnaryExpr
+                   | MultiplicativeExpr MUL UnaryExpr { printf("MUL\n"); $<object_val>1.value = $<object_val>1.value * $<object_val>3.value; $$ = $<object_val>1;}
+                   | MultiplicativeExpr DIV UnaryExpr { printf("DIV\n"); $<object_val>1.value = $<object_val>1.value / $<object_val>3.value; $$ = $<object_val>1;}
+                   | MultiplicativeExpr REM UnaryExpr { printf("REM\n"); $<object_val>1.value = $<object_val>1.value % $<object_val>3.value; $$ = $<object_val>1;}
+                   ;
+
+UnaryExpr : PostfixExpr
           | NOT UnaryExpr { printf("NOT\n"); $<object_val>2.value = !$<object_val>2.value; $$ = $<object_val>2;}
           | BNT UnaryExpr { printf("BNT\n"); $<object_val>2.value = ~$<object_val>2.value; $$ = $<object_val>2;}
           | SUB UnaryExpr { printf("NEG\n"); $<object_val>2.value = -$<object_val>2.value; $$ = $<object_val>2;}
           ;
     
-MultiplicativeExpr : PostfixExpr
-                   | MultiplicativeExpr MUL UnaryExpr { printf("MUL\n"); $<object_val>1.value = $<object_val>1.value * $<object_val>3.value; $$ = $<object_val>1;}
-                   | MultiplicativeExpr DIV UnaryExpr { printf("DIV\n"); $<object_val>1.value = $<object_val>1.value / $<object_val>3.value; $$ = $<object_val>1;}
-                   | MultiplicativeExpr REM UnaryExpr { printf("REM\n"); $<object_val>1.value = $<object_val>1.value % $<object_val>3.value; $$ = $<object_val>1;}
-                   ;
+
 
 PostfixExpr : PrimaryExpr
             | PostfixExpr INC_ASSIGN { printf("INC_ASSIGN\n"); $<object_val>1.value = $<object_val>1.value + 1; $$ = $<object_val>1;}
