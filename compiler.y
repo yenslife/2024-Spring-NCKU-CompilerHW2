@@ -167,14 +167,14 @@ ShiftExpr : AdditiveExpr
           ; 
 
 AdditiveExpr : MultiplicativeExpr
-             | AdditiveExpr ADD MultiplicativeExpr { printf("ADD\n"); $<object_val>1.value = $<object_val>1.value + $<object_val>3.value; $$ = $<object_val>1;}
-             | AdditiveExpr SUB MultiplicativeExpr { printf("SUB\n"); $<object_val>1.value = $<object_val>1.value - $<object_val>3.value; $$ = $<object_val>1;}
+             | AdditiveExpr ADD MultiplicativeExpr { if (!objectExpression('+', &$<object_val>1, &$<object_val>3, &$$)) YYABORT;}
+             | AdditiveExpr SUB MultiplicativeExpr { if (!objectExpression('-', &$<object_val>1, &$<object_val>3, &$$)) YYABORT;}
              ;
 
 MultiplicativeExpr : UnaryExpr
-                   | MultiplicativeExpr MUL UnaryExpr { printf("MUL\n"); $<object_val>1.value = $<object_val>1.value * $<object_val>3.value; $$ = $<object_val>1;}
-                   | MultiplicativeExpr DIV UnaryExpr { printf("DIV\n"); $<object_val>1.value = $<object_val>1.value / $<object_val>3.value; $$ = $<object_val>1;}
-                   | MultiplicativeExpr REM UnaryExpr { printf("REM\n"); $<object_val>1.value = $<object_val>1.value % $<object_val>3.value; $$ = $<object_val>1;}
+                   | MultiplicativeExpr MUL UnaryExpr { if (!objectExpression('*', &$<object_val>1, &$<object_val>3, &$$)) YYABORT;}
+                   | MultiplicativeExpr DIV UnaryExpr { if (!objectExpression('/', &$<object_val>1, &$<object_val>3, &$$)) YYABORT;}
+                   | MultiplicativeExpr REM UnaryExpr { if (!objectExpression('%', &$<object_val>1, &$<object_val>3, &$$)) YYABORT;}
                    ;
 
 UnaryExpr : PostfixExpr
