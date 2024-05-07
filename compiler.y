@@ -161,10 +161,10 @@ RelationalExpr : AdditiveExpr
                | RelationalExpr GEQ AdditiveExpr { printf("GEQ\n"); $<object_val>1.value = $<object_val>1.value >= $<object_val>3.value; $$ = $<object_val>1;}
                ;
 
-/* ShiftExpr : AdditiveExpr
+ShiftExpr : AdditiveExpr
           | ShiftExpr SHL AdditiveExpr { printf("SHL\n"); $<object_val>1.value = $<object_val>1.value << $<object_val>3.value; $$ = $<object_val>1;}
           | ShiftExpr SHR AdditiveExpr { printf("SHR\n"); $<object_val>1.value = $<object_val>1.value >> $<object_val>3.value; $$ = $<object_val>1;}
-          ; */
+          ; 
 
 AdditiveExpr : MultiplicativeExpr
              | AdditiveExpr ADD MultiplicativeExpr { printf("ADD\n"); $<object_val>1.value = $<object_val>1.value + $<object_val>3.value; $$ = $<object_val>1;}
