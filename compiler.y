@@ -130,34 +130,34 @@ ConditionalExpr : LogicalOrExpr
                 ;
 
 LogicalOrExpr : LogicalAndExpr
-              | LogicalOrExpr LOR LogicalAndExpr { printf("LOR\n"); $<object_val>1.value = $<object_val>1.value || $<object_val>3.value; $$ = $<object_val>1;}
+              | LogicalOrExpr LOR LogicalAndExpr { $$.type = OBJECT_TYPE_BOOL; if (!objectExpBoolean('|', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
               ;
 
 LogicalAndExpr : InclusiveOrExpr
-               | LogicalAndExpr LAN InclusiveOrExpr { printf("LAN\n"); $<object_val>1.value = $<object_val>1.value && $<object_val>3.value; $$ = $<object_val>1;}
+               | LogicalAndExpr LAN InclusiveOrExpr { $$.type = OBJECT_TYPE_BOOL; if (!objectExpBoolean('&', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
                ;
 
 InclusiveOrExpr : ExclusiveOrExpr
-                | InclusiveOrExpr BOR ExclusiveOrExpr { printf("BOR\n"); $<object_val>1.value = $<object_val>1.value | $<object_val>3.value; $$ = $<object_val>1;}
+                | InclusiveOrExpr BOR ExclusiveOrExpr { if (!objectExpBinary('|', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
                 ;
 
 ExclusiveOrExpr : AndExpr
-                | ExclusiveOrExpr BXO AndExpr { printf("BXO\n"); $<object_val>1.value = $<object_val>1.value ^ $<object_val>3.value; $$ = $<object_val>1;}
+                | ExclusiveOrExpr BXO AndExpr { if (!objectExpBinary('^', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
                 ;
 
 AndExpr : EqualityExpr
-        | AndExpr BAN EqualityExpr { printf("BAN\n"); $<object_val>1.value = $<object_val>1.value & $<object_val>3.value; $$ = $<object_val>1;}
+        | AndExpr BAN EqualityExpr { if (!objectExpBinary('&', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
         ;
 
 EqualityExpr : RelationalExpr
-             | EqualityExpr EQL RelationalExpr { printf("EQL\n"); $<object_val>1.value = $<object_val>1.value == $<object_val>3.value; $$ = $<object_val>1;}
-             | EqualityExpr NEQ RelationalExpr { printf("NEQ\n"); $<object_val>1.value = $<object_val>1.value != $<object_val>3.value; $$ = $<object_val>1;}
+             | EqualityExpr EQL RelationalExpr { if (!objectExpBoolean('=', &$<object_val>1, &$<object_val>3, &$$)) YYABORT;}
+             | EqualityExpr NEQ RelationalExpr { if (!objectExpBoolean('!', &$<object_val>1, &$<object_val>3, &$$)) YYABORT;}
              ;
 
 RelationalExpr : AdditiveExpr
-               | RelationalExpr LES AdditiveExpr { printf("LES\n"); $<object_val>1.value = $<object_val>1.value < $<object_val>3.value; $$ = $<object_val>1;}
+               | RelationalExpr LES AdditiveExpr { $$.type = OBJECT_TYPE_BOOL; if (!objectExpBoolean('<', &$<object_val>1, &$<object_val>3, &$$)) YYABORT;}
                | RelationalExpr LEQ AdditiveExpr { printf("LEQ\n"); $<object_val>1.value = $<object_val>1.value <= $<object_val>3.value; $$ = $<object_val>1;}
-               | RelationalExpr GTR AdditiveExpr { printf("GTR\n"); $<object_val>1.value = $<object_val>1.value > $<object_val>3.value; $$ = $<object_val>1;}
+               | RelationalExpr GTR AdditiveExpr { $$.type = OBJECT_TYPE_BOOL; if (!objectExpBoolean('>', &$<object_val>1, &$<object_val>3, &$$)) YYABORT;}
                | RelationalExpr GEQ AdditiveExpr { printf("GEQ\n"); $<object_val>1.value = $<object_val>1.value >= $<object_val>3.value; $$ = $<object_val>1;}
                ;
 
@@ -178,9 +178,9 @@ MultiplicativeExpr : UnaryExpr
                    ;
 
 UnaryExpr : PostfixExpr
-          | NOT UnaryExpr { printf("NOT\n"); $<object_val>2.value = !$<object_val>2.value; $$ = $<object_val>2;}
+          | NOT UnaryExpr { if (!objectNotBinaryExpression(&$<object_val>2, &$$)) YYABORT;}
           | BNT UnaryExpr { printf("BNT\n"); $<object_val>2.value = ~$<object_val>2.value; $$ = $<object_val>2;}
-          | SUB UnaryExpr { printf("NEG\n"); $<object_val>2.value = -$<object_val>2.value; $$ = $<object_val>2;}
+          | SUB UnaryExpr { if (!objectNegExpression(&$<object_val>2, &$$)) YYABORT;}
           ;
     
 

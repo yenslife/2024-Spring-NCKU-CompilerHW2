@@ -119,14 +119,85 @@ void debugPrintInst(char instc, Object* a, Object* b, Object* out) {
 }
 
 bool objectExpression(char op, Object* dest, Object* val, Object* out) {
+    // 用法: if (objectExpression('+', &$<obj_val>1, &$<obj_val>3, &$$))
+    // 會回傳 true/false 代表是否成功
+    // 函式的功能是將 dest 和 val 進行運算，結果存到 out
+    // 例如: dest = 1, val = 2, op = '+', 則 out = 3
+    if (op == '+') {
+        out->value = dest->value + val->value;
+        printf("ADD\n");
+        return true;
+    } else if (op == '-') {
+        out->value = dest->value - val->value;
+        printf("SUB\n");
+        return true;
+    } else if (op == '*') {
+        out->value = dest->value * val->value;
+        printf("MUL\n");
+        return true;
+    } else if (op == '/') {
+        out->value = dest->value / val->value;
+        printf("DIV\n");
+        return true;
+    } else if (op == '%') {
+        out->value = dest->value % val->value;
+        printf("REM\n");
+        return true;
+    }
     return false;
 }
 
 bool objectExpBinary(char op, Object* a, Object* b, Object* out) {
+    if (op == '^') {
+        out->value = a->value ^ b->value;
+        printf("XOR\n");
+        return true;
+    } else if (op == '|') {
+        out->value = a->value | b->value;
+        printf("OR\n");
+        return true;
+    } else if (op == '&') {
+        out->value = a->value & b->value;
+        printf("AND\n");
+        return true;
+    } else if (op == '>') {
+        out->value = a->value >> b->value;
+        printf("SHR\n");
+        return true;
+    } else if (op == '<') {
+        out->value = a->value << b->value;
+        printf("SHL\n");
+        return true;
+    }
     return false;
 }
 
 bool objectExpBoolean(char op, Object* a, Object* b, Object* out) {
+    if (op == '>') {
+        out->value = a->value > b->value;
+        printf("GTR\n");
+        return true;
+    } else if (op == '<') {
+        out->value = a->value < b->value;
+        printf("LES\n");
+        return true;
+    } else if (op == '|') {
+        out->value = a->value || b->value;
+        printf("LOR\n");
+        return true;
+    } else if (op == '&') {
+        out->value = a->value && b->value;
+        printf("LAN\n");
+        return true;
+    } else if (op == '=') {
+        out->value = a->value == b->value;
+        printf("EQL\n");
+        return true;
+    } else if (op == '!') {
+        out->value = a->value != b->value;
+        printf("NEQ\n");
+        return true;
+    }
     return false;
 }
 
@@ -139,11 +210,23 @@ bool objectValueAssign(Object* dest, Object* val, Object* out) {
 }
 
 bool objectNotBinaryExpression(Object* dest, Object* out) {
-    return false;
+    // object not binary expression
+    // 意思是將 dest 的值取反，存到 out
+    if (!dest || !out) {
+        return false;
+    }
+    out->value = !dest->value;
+    printf("NOT\n");
+    return true;
 }
 
 bool objectNegExpression(Object* dest, Object* out) {
-    return false;
+    if (!dest || !out) {
+        return false;
+    }
+    out->value = -dest->value;
+    printf("NEG\n");
+    return true;
 }
 bool objectNotExpression(Object* dest, Object* out) {
     return false;
