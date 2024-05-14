@@ -15,6 +15,9 @@ int yylex_destroy();
 void pushScope();
 void dumpScope();
 
+// stack
+extern struct list_head *scopeList[1024]; /* scope list */
+
 void pushFunParm(ObjectType variableType, char* variableName, int parmFlag);
 void createFunction(ObjectType variableType, char* funcName);
 void pushFunInParm(Object* b);

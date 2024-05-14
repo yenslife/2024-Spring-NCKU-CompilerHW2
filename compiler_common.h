@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "list.h"
 
 typedef enum _objectType {
     OBJECT_TYPE_UNDEFINED,
@@ -31,6 +32,7 @@ typedef struct _object {
     ObjectType type;
     uint64_t value;
     SymbolData* symbol;
+    struct list_head list;
 } Object;
 
 extern int yylineno;

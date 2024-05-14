@@ -27,7 +27,13 @@ int funcLineNo = 0;
 int variableAddress = 0;
 ObjectType variableIdentType;
 
+// stack
+struct list_head *scopeList[1024];
+
 void pushScope() {
+    printf("> Create symbol table (scope level %d)\n", ++scopeLevel);
+    scopeList[scopeLevel] = (struct list_head*)malloc(sizeof(struct list_head));
+    INIT_LIST_HEAD(scopeList[scopeLevel]);
 }
 
 void dumpScope() {
@@ -41,6 +47,17 @@ void pushFunParm(ObjectType variableType, char* variableName, int variableFlag) 
 }
 
 void createFunction(ObjectType variableType, char* funcName) {
+    // create function object
+    Object* function = (Object*)malloc(sizeof(Object));
+    function->type = OBJECT_TYPE_FUNCTION;
+    function->symbol = (SymbolData*)malloc(sizeof(SymbolData));
+    function->symbol->name = strdup(funcName);
+    function->symbol->addr = -1; // 如果是 function 就不用 addr
+    printf("func: %s\n", funcName);
+    printf("> Insert `%s` (addr: %ld) to scope level %d\n", funcName, function->symbol->addr, scopeLevel);
+
+    // add to scope list
+    list_add_tail(&function->list, scopeList[scopeLevel]);
 }
 
 void debugPrintInst(char instc, Object* a, Object* b, Object* out) {
