@@ -96,20 +96,86 @@ void createFunction(ObjectType variableType, char* funcName) {
 void debugPrintInst(char instc, Object* a, Object* b, Object* out) {
 }
 
+bool outTypeConvert(Object* a, Object* b, Object* out) {
+    if (a->type == OBJECT_TYPE_INT && b->type == OBJECT_TYPE_INT) {
+        out->type = OBJECT_TYPE_INT;
+    } else if (a->type == OBJECT_TYPE_FLOAT || b->type == OBJECT_TYPE_FLOAT) {
+        out->type = OBJECT_TYPE_FLOAT;
+    } else if (a->type == OBJECT_TYPE_BOOL && b->type == OBJECT_TYPE_INT) {
+        out->type = OBJECT_TYPE_INT;
+    } else if (a->type == OBJECT_TYPE_INT && b->type == OBJECT_TYPE_BOOL) {
+        out->type = OBJECT_TYPE_INT;
+    } 
+    else {
+        out->type = OBJECT_TYPE_UNDEFINED;
+        printf("a type: %s, b type: %s\n", objectTypeName[a->type], objectTypeName[b->type]);
+        printf("a value: %ld, b value: %ld\n", a->value, b->value);
+    }
+    return true;
+}
+
 bool objectExpression(char op, Object* dest, Object* val, Object* out) {
-    return false;
+
+    // type convert
+    if (!outTypeConvert(dest, val, out)) {
+        // out->type = OBJECT_TYPE_UNDEFINED;
+        return false;
+    }
+
+    if (op == '+') {
+        out->value = dest->value + val->value;
+        printf("ADD\n");
+    } else if (op == '-') {
+        out->value = dest->value - val->value;
+        printf("SUB\n");
+    } else if (op == '*') {
+        out->value = dest->value * val->value;
+        printf("MUL\n");
+    } else if (op == '/') {
+        out->value = dest->value / val->value;
+        printf("DIV\n");
+    } else if (op == '%') {
+        out->value = dest->value % val->value;
+        printf("REM\n");
+    }
+    return true;
 }
 
 bool objectExpBinary(char op, Object* a, Object* b, Object* out) {
-    return false;
+    return true;
 }
 
 bool objectExpBoolean(char op, Object* a, Object* b, Object* out) {
-    return false;
+    // type convert
+    out->type = OBJECT_TYPE_BOOL;
+    if (op == '>') {
+        out->value = a->value > b->value;
+        printf("GTR\n");
+    } else if (op == '<') {
+        out->value = a->value < b->value;
+        printf("LES\n");
+    } else if (op == '&') {
+        out->value = a->value && b->value;
+        printf("LAN\n");
+    } else if (op == '|') {
+        out->value = a->value || b->value;
+        printf("LOR\n");
+    } else if (op == '=') {
+        out->value = a->value == b->value;
+        printf("EQU\n"); 
+    } else if (op == '!') {
+        out->value = a->value != b->value;
+        printf("NEQ\n");
+    }
+    else {
+        // out->type = OBJECT_TYPE_UNDEFINED;
+        // return false;
+    }
+    return true;
 }
 
 bool objectExpAssign(char op, Object* dest, Object* val, Object* out) {
-    return false;
+    return true;
 }
 
 bool objectValueAssign(Object* dest, Object* val, Object* out) {
@@ -117,14 +183,26 @@ bool objectValueAssign(Object* dest, Object* val, Object* out) {
 }
 
 bool objectNotBinaryExpression(Object* dest, Object* out) {
-    return false;
+    return true;
 }
 
 bool objectNegExpression(Object* dest, Object* out) {
-    return false;
+    if (!dest || !out) {
+        return false;
+    }
+    out->type = OBJECT_TYPE_INT;
+    out->value = -dest->value;
+    printf("NEG\n");
+    return true;
 }
 bool objectNotExpression(Object* dest, Object* out) {
-    return false;
+    if (!dest || !out) {
+        return false;
+    }
+    out->type = OBJECT_TYPE_BOOL;
+    out->value = !dest->value;
+    printf("NOT\n");
+    return true;
 }
 
 bool objectIncAssign(Object* a, Object* out) {
@@ -153,6 +231,7 @@ void stdoutPrint() {
     printf("cout");
     for (int i = 0; i < coutIndex; i++) {
         printf(" %s", objectTypeName[coutList[i].type]);
+        // printf(" %ld", coutList[i].value);
     }
     printf("\n");
     coutIndex = 0;
