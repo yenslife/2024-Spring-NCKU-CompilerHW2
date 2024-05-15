@@ -17,8 +17,17 @@ void dumpScope();
 
 // stack
 extern struct list_head *scopeList[1024]; /* scope list */
+typedef struct IdentListNode {
+    char* ident;
+    int var_type;
+    struct IdentListNode* next;
+} IdentListNode;
 
 void pushFunParm(ObjectType variableType, char* variableName, int parmFlag);
+void pushVariable(ObjectType variableType, char* variableName, int variableFlag);
+IdentListNode* createIdentList(char* ident);
+IdentListNode* appendIdentList(IdentListNode* list, char* ident);
+void pushVariableList(ObjectType varType, IdentListNode* list, int varFlag);
 void createFunction(ObjectType variableType, char* funcName);
 void pushFunInParm(Object* b);
 
@@ -35,6 +44,8 @@ bool objectNegExpression(Object* dest, Object* out);
 bool objectIncAssign(Object* a, Object* out);
 bool objectDecAssign(Object* a, Object* out);
 bool objectCast(ObjectType variableType, Object* dest, Object* out);
+
+Object processIdentifier(char* identifier);
 
 void stdoutPrint();
 

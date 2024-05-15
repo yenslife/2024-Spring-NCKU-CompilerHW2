@@ -17,6 +17,7 @@
     char *s_var;
 
     Object object_val;
+    struct IdentListNode* ident_list;
 }
 
 /* Token without return */
@@ -45,6 +46,7 @@
 %type <object_val> UnaryExpr
 %type <object_val> PostfixExpr
 %type <object_val> PrimaryExpr
+%type <ident_list> IdentList
 
 /* Token with return */
 %token <i_var> INT_LIT
@@ -77,8 +79,13 @@ GlobalStmt
 ;
 
 DefineVariableStmt
-    : VARIABLE_T IDENT VAL_ASSIGN Expression ';'
+    : VARIABLE_T IDENT VAL_ASSIGN Expression ';' { pushVariable($<var_type>1, $<s_var>2, VAR_FLAG_DEFAULT); }
+    | VARIABLE_T IdentList ';' { pushVariableList($1, $2, VAR_FLAG_DEFAULT); }
 ;
+
+IdentList
+    : IDENT { $$ = createIdentList($1); }
+    | IdentList ',' IDENT { $$ = appendIdentList($1, $3); }
 
 /* Function */
 FunctionDefStmt
@@ -105,6 +112,23 @@ Stmt
     : ';'
     | COUT CoutParmListStmt ';' { stdoutPrint(); }
     | RETURN Expression ';' { printf("RETURN\n"); }
+    | DefineVariableStmt
+    | AssignVariableStmt
+;
+
+AssignVariableStmt
+    : IDENT {processIdentifier($<s_var>1);} VAL_ASSIGN Expression ';' { if (!objectExpAssign('=', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} ADD_ASSIGN Expression ';' { if (!objectExpAssign('+', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} SUB_ASSIGN Expression ';' { if (!objectExpAssign('-', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} MUL_ASSIGN Expression ';' { if (!objectExpAssign('*', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} DIV_ASSIGN Expression ';' { if (!objectExpAssign('/', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} REM_ASSIGN Expression ';' { if (!objectExpAssign('%', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} BAN_ASSIGN Expression ';' { if (!objectExpAssign('&', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} BOR_ASSIGN Expression ';' { if (!objectExpAssign('|', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} BXO_ASSIGN Expression ';' { if (!objectExpAssign('^', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} SHR_ASSIGN Expression ';' { if (!objectExpAssign('>', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} SHL_ASSIGN Expression ';' { if (!objectExpAssign('<', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+
 ;
 
 CoutParmListStmt
@@ -112,7 +136,7 @@ CoutParmListStmt
     | SHL Expression { pushFunInParm(&$<object_val>2); }
 ;
 
-Expression : '(' ConditionalExpr ')' { $$ = $2; }
+Expression : '(' Expression ')' { $$ = $2; }
            | ConditionalExpr { $$ = $1;}
            ;
 
@@ -129,15 +153,15 @@ LogicalAndExpr : InclusiveOrExpr
                ;
 
 InclusiveOrExpr : ExclusiveOrExpr
-                | InclusiveOrExpr BOR ExclusiveOrExpr { printf("BOR\n"); $$ = $1; }
+                | InclusiveOrExpr BOR ExclusiveOrExpr { if (!objectExpBinary('|', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
                 ;
 
 ExclusiveOrExpr : AndExpr
-                | ExclusiveOrExpr BXO AndExpr { printf("BXO\n"); $$ = $1; }
+                | ExclusiveOrExpr BXO AndExpr { !objectExpBinary('^', &$<object_val>1, &$<object_val>3, &$$); }
                 ;
 
 AndExpr : EqualityExpr
-        | AndExpr BAN EqualityExpr { printf("BAN\n"); $$ = $1; }
+        | AndExpr BAN EqualityExpr { if (!objectExpBinary('&', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
         ;
 
 EqualityExpr : RelationalExpr { $$ = $1;}
@@ -170,7 +194,7 @@ MultiplicativeExpr : UnaryExpr { $$ = $1;}
 
 UnaryExpr : PostfixExpr
           | NOT UnaryExpr { if (!objectNotExpression(&$<object_val>2, &$$)) YYABORT;}
-          | BNT UnaryExpr { printf("BNT\n"); $$ = $2;}
+          | BNT UnaryExpr { if (!objectNotBinaryExpression(&$<object_val>2, &$$)) YYABORT;}
           | SUB UnaryExpr { if (!objectNegExpression(&$<object_val>2, &$$)) YYABORT;}
           ;
     
@@ -201,11 +225,11 @@ PrimaryExpr
     }
     | FLOAT_LIT { 
         Object* obj = malloc(sizeof(Object));
-        obj->value = $<f_var>1;
+        obj->value = $<f_var>1; // 會有問題，因為 value 是 uint64_t
         obj->type = OBJECT_TYPE_FLOAT;
         obj->symbol = NULL;
         $$ = *obj;
-        printf("FLOAT_LIT %f\n", (float) $$.value); 
+        printf("FLOAT_LIT %f\n", $<f_var>1); 
     }
     | BOOL_LIT {
         Object* obj = malloc(sizeof(Object));
@@ -215,18 +239,7 @@ PrimaryExpr
         $$ = *obj;
         printf("BOOL_LIT %s\n", (bool) $$.value ? "TRUE" : "FALSE");
     }
-    | IDENT {
-        Object* obj = malloc(sizeof(Object));
-        obj->symbol = malloc(sizeof(SymbolData));
-        obj->symbol->name = $<s_var>1;
-        if (!strcmp($<s_var>1, "endl")) {
-            obj->symbol->addr = -1;
-            obj->value = (uint64_t) "\n";
-            obj->type = OBJECT_TYPE_STR;
-        }
-        $$ = *obj;
-        printf("IDENT (name=%s, address=%ld)\n", $$.symbol->name, $$.symbol->addr); 
-    }    
+    | IDENT { $$ = processIdentifier($<s_var>1);}
 ;
 %%
 /* C code section */

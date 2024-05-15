@@ -74,6 +74,50 @@ void pushFunParm(ObjectType variableType, char* variableName, int variableFlag) 
     list_add_tail(&variable->list, scopeList[scopeLevel]);
 }
 
+void pushVariable(ObjectType variableType, char* variableName, int variableFlag) {
+    // create variable object
+    Object* variable = createVariable(variableType, variableName, variableFlag);
+    printf("> Insert `%s` (addr: %ld) to scope level %d\n", variableName, variable->symbol->addr, scopeLevel);
+
+    // calculate index
+    struct list_head *pos;
+    Object *obj;
+    int maxIndex = 0;
+    list_for_each(pos, scopeList[scopeLevel]) {
+        obj = list_entry(pos, Object, list);
+        if (obj->symbol->index > maxIndex) {
+            maxIndex = obj->symbol->index;
+        }
+    }
+    variable->symbol->index = maxIndex + 1;
+    // add to scope list
+    list_add_tail(&variable->list, scopeList[scopeLevel]);
+}
+
+IdentListNode* createIdentList(char* ident) {
+    IdentListNode* node = (IdentListNode*)malloc(sizeof(IdentListNode));
+    node->ident = strdup(ident);
+    node->next = NULL;
+    return node;
+}
+
+IdentListNode* appendIdentList(IdentListNode* list, char* ident) {
+    IdentListNode* current = list;
+    while (current->next != NULL) {
+        current = current->next;
+    }
+    current->next = createIdentList(ident);
+    return list;
+}
+
+void pushVariableList(ObjectType varType, IdentListNode* list, int varFlag) {
+    IdentListNode* current = list;
+    while (current != NULL) {
+        pushVariable(varType, current->ident, varFlag);
+        current = current->next;
+    }
+}
+
 void createFunction(ObjectType variableType, char* funcName) {
     // create function object
     Object* function = (Object*)malloc(sizeof(Object));
@@ -123,25 +167,41 @@ bool objectExpression(char op, Object* dest, Object* val, Object* out) {
     }
 
     if (op == '+') {
-        out->value = dest->value + val->value;
+        // out->value = dest->value + val->value;
         printf("ADD\n");
     } else if (op == '-') {
-        out->value = dest->value - val->value;
+        // out->value = dest->value - val->value;
         printf("SUB\n");
     } else if (op == '*') {
-        out->value = dest->value * val->value;
+        // out->value = dest->value * val->value;
         printf("MUL\n");
     } else if (op == '/') {
-        out->value = dest->value / val->value;
+        // out->value = dest->value / val->value;
         printf("DIV\n");
     } else if (op == '%') {
-        out->value = dest->value % val->value;
+        // out->value = dest->value % val->value;
         printf("REM\n");
     }
     return true;
 }
 
 bool objectExpBinary(char op, Object* a, Object* b, Object* out) {
+    if (op == '>') {
+        // out->value = a->value >> b->value;
+        printf("SHR\n");
+    } else if (op == '<') {
+        // out->value = a->value << b->value;
+        printf("SHL\n");
+    } else if (op == '|') {
+        // out->value = a->value | b->value;
+        printf("BOR\n");
+    } else if (op == '&') {
+        // out->value = a->value & b->value;
+        printf("BAN\n");
+    } else if (op == '^') {
+        // out->value = a->value ^ b->value;
+        printf("BXO\n");
+    } 
     return true;
 }
 
@@ -149,22 +209,22 @@ bool objectExpBoolean(char op, Object* a, Object* b, Object* out) {
     // type convert
     out->type = OBJECT_TYPE_BOOL;
     if (op == '>') {
-        out->value = a->value > b->value;
+        // out->value = a->value > b->value;
         printf("GTR\n");
     } else if (op == '<') {
-        out->value = a->value < b->value;
+        // out->value = a->value < b->value;
         printf("LES\n");
     } else if (op == '&') {
-        out->value = a->value && b->value;
+        // out->value = a->value && b->value;
         printf("LAN\n");
     } else if (op == '|') {
-        out->value = a->value || b->value;
+        // out->value = a->value || b->value;
         printf("LOR\n");
     } else if (op == '=') {
-        out->value = a->value == b->value;
+        // out->value = a->value == b->value;
         printf("EQU\n"); 
     } else if (op == '!') {
-        out->value = a->value != b->value;
+        // out->value = a->value != b->value;
         printf("NEQ\n");
     }
     else {
@@ -175,6 +235,30 @@ bool objectExpBoolean(char op, Object* a, Object* b, Object* out) {
 }
 
 bool objectExpAssign(char op, Object* dest, Object* val, Object* out) {
+    out->type = dest->type;
+    if (op == '=') {
+        printf("EQL_ASSIGN\n");
+    } else if (op == '+') {
+        printf("ADD_ASSIGN\n");
+    } else if (op == '-') {
+        printf("SUB_ASSIGN\n");
+    } else if (op == '*') {
+        printf("MUL_ASSIGN\n");
+    } else if (op == '/') {
+        printf("DIV_ASSIGN\n");
+    } else if (op == '%') {
+        printf("REM_ASSIGN\n");
+    } else if (op == '|') {
+        printf("BOR_ASSIGN\n");
+    } else if (op == '&') {
+        printf("BAN_ASSIGN\n");
+    } else if (op == '^') {
+        printf("BXO_ASSIGN\n");
+    } else if (op == '>') {
+        printf("SHR_ASSIGN\n");
+    } else if (op == '<') {
+        printf("SHL_ASSIGN\n");
+    }
     return true;
 }
 
@@ -183,6 +267,12 @@ bool objectValueAssign(Object* dest, Object* val, Object* out) {
 }
 
 bool objectNotBinaryExpression(Object* dest, Object* out) {
+    if (!dest || !out) {
+        return false;
+    }
+    out->type = OBJECT_TYPE_INT;
+    out->value = ~dest->value;
+    printf("BNT\n");
     return true;
 }
 
@@ -219,12 +309,47 @@ bool objectCast(ObjectType variableType, Object* dest, Object* out) {
 
 Object* findVariable(char* variableName) {
     Object* variable = NULL;
+    struct list_head *pos;
+    Object *obj;
+    for (int i = scopeLevel; i >= 0; i--) {
+        list_for_each(pos, scopeList[i]) {
+            obj = list_entry(pos, Object, list);
+            if (strcmp(obj->symbol->name, variableName) == 0) {
+                variable = obj;
+                break;
+            }
+        }
+        if (variable) {
+            break;
+        }
+    }
     return variable;
 }
 
 void pushFunInParm(Object* variable) {
     // 目前只有 cout 用到
     coutList[coutIndex++] = *variable;
+}
+
+Object processIdentifier(char* identifier) {
+    Object* obj = findVariable(identifier);
+    if (obj == NULL) {
+        obj = (Object*)malloc(sizeof(Object));
+        obj->symbol = (SymbolData*)malloc(sizeof(SymbolData));
+        obj->symbol->name = strdup(identifier); // 注意，这里使用 strdup 来复制字符串
+
+        if (strcmp(identifier, "endl") == 0) {
+            obj->symbol->addr = -1;
+            obj->value = (uint64_t) "\n";
+            obj->type = OBJECT_TYPE_STR;
+        } else {
+            obj->symbol->addr = 0; // 如果不是特殊符号，默认地址为 0，可以根据需要修改
+            obj->value = 0; // 默认值
+            obj->type = OBJECT_TYPE_UNDEFINED; // 默认类型
+        }
+    }
+    printf("IDENT (name=%s, address=%ld)\n", obj->symbol->name, obj->symbol->addr);
+    return *obj;
 }
 
 void stdoutPrint() {
