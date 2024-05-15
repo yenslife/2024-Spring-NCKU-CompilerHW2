@@ -116,7 +116,16 @@ Stmt
     | RETURN Expression ';' { printf("RETURN\n"); }
     | DefineVariableStmt
     | AssignVariableStmt
+    | IFStmt
 ;
+
+IFStmt
+    : IF Expression {printf("IF\n"); pushScope();} '{' StmtList '}' {dumpScope();} ElseStmt
+;
+
+ElseStmt
+    : ELSE {printf("ELSE\n"); pushScope();}'{' StmtList '}' {dumpScope();}
+    | /* Empty else */
 
 AssignVariableStmt
     : IDENT {processIdentifier($<s_var>1);} VAL_ASSIGN Expression ';' { if (!objectExpAssign('=', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
