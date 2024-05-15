@@ -46,6 +46,7 @@
 %type <object_val> UnaryExpr
 %type <object_val> PostfixExpr
 %type <object_val> PrimaryExpr
+%type <object_val> CoutExpr
 %type <ident_list> IdentList
 
 /* Token with return */
@@ -132,9 +133,17 @@ AssignVariableStmt
 ;
 
 CoutParmListStmt
-    : CoutParmListStmt SHL Expression { pushFunInParm(&$<object_val>3); }
-    | SHL Expression { pushFunInParm(&$<object_val>2); }
+    : CoutParmListStmt SHL CoutExpr { pushFunInParm(&$<object_val>3); }
+    | SHL CoutExpr { pushFunInParm(&$<object_val>2); }
 ;
+
+CoutExpr 
+    : PrimaryExpr { $$ = $1; }
+    | AdditiveExpr { $$ = $1; }
+    | MultiplicativeExpr { $$ = $1; }
+    | UnaryExpr { $$ = $1; }
+    | PostfixExpr { $$ = $1; }
+    ;
 
 Expression : '(' Expression ')' { $$ = $2; }
            | ConditionalExpr { $$ = $1;}
@@ -169,7 +178,7 @@ EqualityExpr : RelationalExpr { $$ = $1;}
              | EqualityExpr NEQ RelationalExpr { if (!objectExpBoolean('!', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
              ;
 
-RelationalExpr : AdditiveExpr { $$ = $1;}
+RelationalExpr : ShiftExpr { $$ = $1;}
                | RelationalExpr LES AdditiveExpr { if (!objectExpBoolean('<', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
                | RelationalExpr LEQ AdditiveExpr { printf("LEQ\n"); $$ = $1;}
                | RelationalExpr GTR AdditiveExpr { if (!objectExpBoolean('>', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
