@@ -117,7 +117,12 @@ Stmt
     | DefineVariableStmt
     | AssignVariableStmt
     | IFStmt
+    | WHILEStmt
 ;
+
+WHILEStmt
+    : WHILE {printf("WHILE\n");} Expression {pushScope();} '{' StmtList '}' {dumpScope();}
+
 
 IFStmt
     : IF Expression {printf("IF\n"); pushScope();} '{' StmtList '}' {dumpScope();} ElseStmt
