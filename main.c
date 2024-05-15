@@ -76,6 +76,9 @@ void pushFunParm(ObjectType variableType, char* variableName, int variableFlag) 
 
 void pushVariable(ObjectType variableType, char* variableName, int variableFlag) {
     // create variable object
+    if (variableType == OBJECT_TYPE_UNDEFINED) {
+        variableType = variableIdentType;
+    }
     Object* variable = createVariable(variableType, variableName, variableFlag);
     printf("> Insert `%s` (addr: %ld) to scope level %d\n", variableName, variable->symbol->addr, scopeLevel);
 
@@ -94,28 +97,8 @@ void pushVariable(ObjectType variableType, char* variableName, int variableFlag)
     list_add_tail(&variable->list, scopeList[scopeLevel]);
 }
 
-IdentListNode* createIdentList(char* ident) {
-    IdentListNode* node = (IdentListNode*)malloc(sizeof(IdentListNode));
-    node->ident = strdup(ident);
-    node->next = NULL;
-    return node;
-}
-
-IdentListNode* appendIdentList(IdentListNode* list, char* ident) {
-    IdentListNode* current = list;
-    while (current->next != NULL) {
-        current = current->next;
-    }
-    current->next = createIdentList(ident);
-    return list;
-}
-
-void pushVariableList(ObjectType varType, IdentListNode* list, int varFlag) {
-    IdentListNode* current = list;
-    while (current != NULL) {
-        pushVariable(varType, current->ident, varFlag);
-        current = current->next;
-    }
+void pushVariableList(ObjectType varType) {
+    variableIdentType = varType;
 }
 
 void createFunction(ObjectType variableType, char* funcName) {
@@ -222,7 +205,7 @@ bool objectExpBoolean(char op, Object* a, Object* b, Object* out) {
         printf("LOR\n");
     } else if (op == '=') {
         // out->value = a->value == b->value;
-        printf("EQU\n"); 
+        printf("EQL\n"); 
     } else if (op == '!') {
         // out->value = a->value != b->value;
         printf("NEQ\n");
@@ -304,7 +287,13 @@ bool objectDecAssign(Object* a, Object* out) {
 }
 
 bool objectCast(ObjectType variableType, Object* dest, Object* out) {
-    return false;
+    if (!dest || !out) {
+        return false;
+    }
+    out->type = variableType;
+    out->value = dest->value;
+    printf("Cast to %s\n", objectTypeName[variableType]);
+    return true;
 }
 
 Object* findVariable(char* variableName) {

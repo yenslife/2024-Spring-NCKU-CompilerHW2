@@ -17,17 +17,10 @@ void dumpScope();
 
 // stack
 extern struct list_head *scopeList[1024]; /* scope list */
-typedef struct IdentListNode {
-    char* ident;
-    int var_type;
-    struct IdentListNode* next;
-} IdentListNode;
 
 void pushFunParm(ObjectType variableType, char* variableName, int parmFlag);
 void pushVariable(ObjectType variableType, char* variableName, int variableFlag);
-IdentListNode* createIdentList(char* ident);
-IdentListNode* appendIdentList(IdentListNode* list, char* ident);
-void pushVariableList(ObjectType varType, IdentListNode* list, int varFlag);
+void pushVariableList(ObjectType varType);
 void createFunction(ObjectType variableType, char* funcName);
 void pushFunInParm(Object* b);
 

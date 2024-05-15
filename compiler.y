@@ -80,14 +80,15 @@ GlobalStmt
 ;
 
 DefineVariableStmt
-    : VARIABLE_T IDENT VAL_ASSIGN Expression ';' { pushVariable($<var_type>1, $<s_var>2, VAR_FLAG_DEFAULT); }
-    | VARIABLE_T IdentList ';' { pushVariableList($1, $2, VAR_FLAG_DEFAULT); }
+    : VARIABLE_T { pushVariableList($1); } IdentList ';' 
 ;
 
 IdentList
-    : IDENT { $$ = createIdentList($1); }
-    | IdentList ',' IDENT { $$ = appendIdentList($1, $3); }
-
+    : IDENT  { pushVariable(OBJECT_TYPE_UNDEFINED, $1, VAR_FLAG_DEFAULT); }
+    | IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $1, VAR_FLAG_DEFAULT); }
+    | IdentList ',' IDENT { pushVariable(OBJECT_TYPE_UNDEFINED, $3, VAR_FLAG_DEFAULT); }
+    | IdentList ',' IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $3, VAR_FLAG_DEFAULT); }
+;
 /* Function */
 FunctionDefStmt
     : 
@@ -166,7 +167,7 @@ InclusiveOrExpr : ExclusiveOrExpr
                 ;
 
 ExclusiveOrExpr : AndExpr
-                | ExclusiveOrExpr BXO AndExpr { !objectExpBinary('^', &$<object_val>1, &$<object_val>3, &$$); }
+                | ExclusiveOrExpr BXO AndExpr { if (!objectExpBinary('^', &$<object_val>1, &$<object_val>3, &$$)) YYABORT; }
                 ;
 
 AndExpr : EqualityExpr
@@ -205,6 +206,7 @@ UnaryExpr : PostfixExpr
           | NOT UnaryExpr { if (!objectNotExpression(&$<object_val>2, &$$)) YYABORT;}
           | BNT UnaryExpr { if (!objectNotBinaryExpression(&$<object_val>2, &$$)) YYABORT;}
           | SUB UnaryExpr { if (!objectNegExpression(&$<object_val>2, &$$)) YYABORT;}
+          | '(' VARIABLE_T ')' UnaryExpr { objectCast($<var_type>2, &$<object_val>4, &$$); }
           ;
     
 
