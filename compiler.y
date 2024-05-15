@@ -31,6 +31,7 @@
 
 /* Nonterminal with return, which need to sepcify type */
 %type <object_val> Expression
+%type <object_val> PrimaryExpr
 
 /* Token with return */
 %token <i_var> INT_LIT
@@ -68,7 +69,9 @@ DefineVariableStmt
 
 /* Function */
 FunctionDefStmt
-    : VARIABLE_T IDENT '(' FunctionParameterStmtList ')' { createFunction($<var_type>1, $<s_var>2); } '{' '}' { dumpScope(); }
+    : 
+     /* VARIABLE_T IDENT '(' FunctionParameterStmtList ')' { createFunction($<var_type>1, $<s_var>2); } '{' '}' { dumpScope(); } */
+    | VARIABLE_T IDENT '(' { createFunction($<var_type>1, $<s_var>2); } FunctionParameterStmtList ')' '{' StmtList '}' { dumpScope(); }
 ;
 FunctionParameterStmtList 
     : FunctionParameterStmtList ',' FunctionParameterStmt
@@ -97,8 +100,38 @@ CoutParmListStmt
 ;
 
 Expression
-    : Expression ADD Expression { $$.type = add($<object_val>1, $<object_val>3); }
+    : PrimaryExpr
 ;
 
+PrimaryExpr
+    : STR_LIT { 
+        Object* obj = malloc(sizeof(Object));
+        obj->value = (uint64_t) $<s_var>1;
+        obj->type = OBJECT_TYPE_STR;
+        obj->symbol = NULL;
+        $$ = *obj;
+        printf("STR_LIT \"%s\"\n", (char *) $$.value); 
+    }
+    | INT_LIT { 
+        Object* obj = malloc(sizeof(Object));
+        obj->value = $<i_var>1;
+        obj->type = OBJECT_TYPE_INT;
+        obj->symbol = NULL;
+        $$ = *obj;
+        printf("INT_LIT %d\n", (int) $$.value); 
+    }
+    | IDENT {
+        Object* obj = malloc(sizeof(Object));
+        obj->symbol = malloc(sizeof(SymbolData));
+        obj->symbol->name = $<s_var>1;
+        if (!strcmp($<s_var>1, "endl")) {
+            obj->symbol->addr = -1;
+            obj->value = (uint64_t) "endll";//"\n";
+            obj->type = OBJECT_TYPE_STR;
+        }
+        $$ = *obj;
+        printf("IDENT (name=%s, address=%ld)\n", $$.symbol->name, $$.symbol->addr); 
+    }    
+;
 %%
 /* C code section */
