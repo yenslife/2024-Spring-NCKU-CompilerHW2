@@ -91,7 +91,7 @@ IdentList
     | IdentList ',' IDENT { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT, NULL); }
     | IdentList ',' IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT, &$<object_val>5); }
     // array
-    | IDENT '[' INT_LIT { printf("INT_LIT %d\n", (int) $<i_var>3); } ']' ArrayInitList {pushArrayVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_ARRAY, $<i_var>3);}
+    | IDENT '[' INT_LIT { printf("INT_LIT %d\n", (int) $<i_var>3); } ']' ArrayInitList {pushArrayVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_ARRAY);}
 ;
 
 ArrayInitList
@@ -99,9 +99,9 @@ ArrayInitList
 ;
 
 ArrayElementList
-    : ArrayElementList ',' Expression 
-    | Expression 
-    | /* Empty array element list */  { setEmptyArray(); }
+    : ArrayElementList ',' Expression { incrementArrayElement();}
+    | Expression { incrementArrayElement();}
+    | /* Empty array element list */ 
 ;
 
 /* Function */
@@ -136,6 +136,7 @@ Stmt
     | FORStmt
     | FunctionCallStmt
     | ArrayElementExpr VAL_ASSIGN Expression { if (!objectExpAssign('=', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }';'
+    | BREAK { printf("BREAK\n"); } ';' 
 ;
 
 FunctionCallStmt
@@ -148,8 +149,14 @@ FunctionArgs
     | /* Empty function argument */
 
 FORStmt
-    : FOR {printf("FOR\n"); pushScope();} '(' forInit forCondition forIncrement ')' '{' StmtList '}' {dumpScope();}
+    : FOR {printf("FOR\n"); pushScope();} '(' LoopLogic ')' '{' StmtList '}' {dumpScope();}
 ;
+
+LoopLogic
+    : forInit forCondition forIncrement
+    // auto loop (e.g. for (auto i : arr) )
+    /* | VARIABLE_T IDENT ':' IDENT  */
+
 
 forInit
     : DefineVariableStmt 

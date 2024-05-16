@@ -26,6 +26,7 @@ int scopeLevel = -1;
 int funcLineNo = 0;
 int variableAddress = 0;
 bool emptyArray = false;
+int arraySize = 0;
 ObjectType variableIdentType;
 
 // stack
@@ -100,15 +101,13 @@ void pushVariableList(ObjectType varType) {
     variableIdentType = varType;
 }
 
-void pushArrayVariable(ObjectType variableType, char* variableName, int variableFlag, int arraySize) {
+void pushArrayVariable(ObjectType variableType, char* variableName, int variableFlag) {
     // create variable object
     if (variableType == OBJECT_TYPE_UNDEFINED) {
         variableType = variableIdentType;
     }
     Object* variable = createVariable(variableType, variableName, variableFlag);
-    if (emptyArray) {
-        arraySize = 0;
-    }
+
     printf("create array: %d\n", arraySize);
     printf("> Insert `%s` (addr: %ld) to scope level %d\n", variableName, variable->symbol->addr, scopeLevel);
 
@@ -117,11 +116,11 @@ void pushArrayVariable(ObjectType variableType, char* variableName, int variable
 
     // add to scope list
     list_add_tail(&variable->list, scopeList[scopeLevel]);
-    emptyArray = false;
+    arraySize = 0;
 }
 
-void setEmptyArray() {
-    emptyArray = true;
+void incrementArrayElement () {
+    arraySize++;
 }
 
 void createFunction(ObjectType variableType, char* funcName) {
