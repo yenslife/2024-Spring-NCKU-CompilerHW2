@@ -27,7 +27,7 @@ void nonInitArray();
 void createFunction(ObjectType variableType, char* funcName);
 void pushFunInParm(Object* b);
 
-Object* findVariable(char* variableName);
+Object* findVariable(char* variableName, ObjectType variableType);
 Object* createVariable(ObjectType variableType, char* variableName, int variableFlag);
 bool objectExpression(char op, Object* a, Object* b, Object* out);
 bool objectExpBinary(char op, Object* a, Object* b, Object* out);
@@ -40,7 +40,7 @@ bool objectNegExpression(Object* dest, Object* out);
 bool objectIncAssign(Object* a, Object* out);
 bool objectDecAssign(Object* a, Object* out);
 bool objectCast(ObjectType variableType, Object* dest, Object* out);
-bool objectFunctionCall(char* name);
+bool objectFunctionCall(char* name, Object* out);
 bool addFunctionParam(char* name);
 
 Object processIdentifier(char* identifier);

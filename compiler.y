@@ -146,12 +146,12 @@ Stmt
 ;
 
 FunctionCallStmt
-    : IDENT '(' FunctionArgs {processIdentifier($<s_var>1);} ')' { if (!objectFunctionCall($<s_var>1)) YYABORT; }
+    : IDENT '(' FunctionArgs {processIdentifier($<s_var>1);} ')' { if (!objectFunctionCall($<s_var>1, &$$)) YYABORT; }
 ;
 
 FunctionArgs
-    : FunctionArgs ',' Expression { pushFunInParm(&$<object_val>3); }
-    | Expression { pushFunInParm(&$<object_val>1); }
+    : FunctionArgs ',' Expression 
+    | Expression 
     | /* Empty function argument */
 
 FORStmt
@@ -198,7 +198,9 @@ WHILEStmt
 
 
 IFStmt
-    : IF Expression {printf("IF\n"); pushScope();} '{' StmtList '}' {dumpScope();} ElseStmt
+    : IF '(' Expression ')' {printf("IF\n"); pushScope();} '{' StmtList '}' {dumpScope();} ElseStmt
+    /* | IF '(' Expression ')' {printf("IF\n"); pushScope();} '{' StmtList '}' {dumpScope();} */
+    | IF '(' Expression ')' { printf("IF\n"); } Stmt 
 ;
 
 ElseStmt
@@ -231,10 +233,12 @@ CoutExpr
     | MultiplicativeExpr { $$ = $1; }
     | UnaryExpr { $$ = $1; }
     | PostfixExpr { $$ = $1; }
+    | FunctionCallStmt { $$ = $1; }
     ;
 
 Expression : '(' Expression ')' { $$ = $2; }
            | ConditionalExpr { $$ = $1;}
+           | /* Empty expression */
            ;
 
 ArrayElementExpr
@@ -311,7 +315,7 @@ PostfixExpr : PrimaryExpr { $$ = $1; }
             | '(' Expression ')' { $$ = $2; }
             | PostfixExpr INC_ASSIGN { printf("INC_ASSIGN\n"); $$ = $1; }
             | PostfixExpr DEC_ASSIGN { printf("DEC_ASSIGN\n"); $$ = $1; }
-            | FunctionCallStmt 
+            | FunctionCallStmt { $$ = $1;}
             ;
 
 PrimaryExpr

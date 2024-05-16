@@ -327,14 +327,14 @@ bool objectCast(ObjectType variableType, Object* dest, Object* out) {
     return true;
 }
 
-Object* findVariable(char* variableName) {
+Object* findVariable(char* variableName, ObjectType variableType) {
     Object* variable = NULL;
     struct list_head *pos;
     Object *obj;
     for (int i = scopeLevel; i >= 0; i--) {
         list_for_each(pos, scopeList[i]) {
             obj = list_entry(pos, Object, list);
-            if (strcmp(obj->symbol->name, variableName) == 0) {
+            if (strcmp(obj->symbol->name, variableName) == 0 && (variableType == OBJECT_TYPE_UNDEFINED || obj->type == variableType)) {
                 variable = obj;
                 break;
             }
@@ -351,10 +351,14 @@ void pushFunInParm(Object* variable) {
     coutList[coutIndex++] = *variable;
 }
 
-bool objectFunctionCall(char* name) {
-    Object *obj = findVariable(name);
+bool objectFunctionCall(char* name, Object* out) {
+    Object *obj = findVariable(name, OBJECT_TYPE_FUNCTION);
     if (obj == NULL) {
         printf("Function `%s` not found\n", name);
+        return false;
+    }
+    if (obj->type != OBJECT_TYPE_FUNCTION) {
+        printf("`%s` is not a function\n", name);
         return false;
     }
     // convert to JNI func_sig
@@ -377,6 +381,9 @@ bool objectFunctionCall(char* name) {
             case OBJECT_TYPE_STR:
                 strcat(func_sig, "Ljava/lang/String;");
                 break;
+            case OBJECT_TYPE_VOID:
+                strcat(func_sig, "V");
+                break;
             default:
                 strcat(func_sig, "L");
                 strcat(func_sig, objectTypeName[obj->symbol->paramTypes[i]]);
@@ -398,6 +405,9 @@ bool objectFunctionCall(char* name) {
         case OBJECT_TYPE_STR:
             strcat(func_sig, "Ljava/lang/String;");
             break;
+        case OBJECT_TYPE_VOID:
+            strcat(func_sig, "V");
+            break;
         default:
             strcat(func_sig, "L");
             strcat(func_sig, objectTypeName[obj->symbol->returnType]);
@@ -408,12 +418,13 @@ bool objectFunctionCall(char* name) {
     printf("call: %s%s\n", obj->symbol->name, obj->symbol->func_sig);
 
     coutIndex = 0;
+    out->type = obj->symbol->returnType;
     return true;
 
 }
 
 bool addFunctionParam(char* name) {
-    Object* obj = findVariable(name);
+    Object* obj = findVariable(name, OBJECT_TYPE_FUNCTION);
     if (obj == NULL) {
         printf("Variable `%s` not found\n", name);
         return false;
@@ -431,7 +442,7 @@ bool addFunctionParam(char* name) {
 }
 
 Object processIdentifier(char* identifier) {
-    Object* obj = findVariable(identifier);
+    Object* obj = findVariable(identifier, OBJECT_TYPE_UNDEFINED);
     if (obj == NULL) {
         obj = (Object*)malloc(sizeof(Object));
         obj->symbol = (SymbolData*)malloc(sizeof(SymbolData));
