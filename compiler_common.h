@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "list.h"
 
+#define MAX_PARAMS 16
+
 typedef enum _objectType {
     OBJECT_TYPE_UNDEFINED,
     OBJECT_TYPE_AUTO,
@@ -26,6 +28,9 @@ typedef struct _symbolData {
     int32_t lineno;
     char* func_sig;
     uint8_t func_var;
+    ObjectType returnType;
+    ObjectType paramTypes[MAX_PARAMS]; 
+    int32_t paramCount; 
 } SymbolData;
 
 typedef struct _object {

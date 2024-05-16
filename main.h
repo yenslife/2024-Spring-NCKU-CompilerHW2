@@ -37,6 +37,8 @@ bool objectNegExpression(Object* dest, Object* out);
 bool objectIncAssign(Object* a, Object* out);
 bool objectDecAssign(Object* a, Object* out);
 bool objectCast(ObjectType variableType, Object* dest, Object* out);
+bool objectFunctionCall(char* name);
+bool addFunctionParam(char* name);
 
 Object processIdentifier(char* identifier);
 

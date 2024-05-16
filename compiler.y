@@ -48,6 +48,7 @@
 %type <object_val> PrimaryExpr
 %type <object_val> CoutExpr
 %type <ident_list> IdentList
+%type <object_val> FunctionCallStmt
 
 /* Token with return */
 %token <i_var> INT_LIT
@@ -80,20 +81,20 @@ GlobalStmt
 ;
 
 DefineVariableStmt
-    : VARIABLE_T { pushVariableList($1); } IdentList ';' 
+    : VARIABLE_T { pushVariableList($1);} IdentList ';' 
 ;
 
 IdentList
-    : IDENT  { pushVariable(OBJECT_TYPE_UNDEFINED, $1, VAR_FLAG_DEFAULT); }
-    | IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $1, VAR_FLAG_DEFAULT); }
-    | IdentList ',' IDENT { pushVariable(OBJECT_TYPE_UNDEFINED, $3, VAR_FLAG_DEFAULT); }
-    | IdentList ',' IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $3, VAR_FLAG_DEFAULT); }
+    : IDENT  { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_DEFAULT); }
+    | IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_DEFAULT); }
+    | IdentList ',' IDENT { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT); }
+    | IdentList ',' IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT); }
 ;
 /* Function */
 FunctionDefStmt
     : 
      /* VARIABLE_T IDENT '(' FunctionParameterStmtList ')' { createFunction($<var_type>1, $<s_var>2); } '{' '}' { dumpScope(); } */
-    | VARIABLE_T IDENT '(' { createFunction($<var_type>1, $<s_var>2); } FunctionParameterStmtList ')' '{' StmtList '}' { dumpScope(); }
+    | VARIABLE_T IDENT '(' { createFunction($<var_type>1, $<s_var>2); } FunctionParameterStmtList ')' { addFunctionParam($<s_var>2); } '{' StmtList '}' { dumpScope(); }
 ;
 FunctionParameterStmtList 
     : FunctionParameterStmtList ',' FunctionParameterStmt
@@ -119,7 +120,17 @@ Stmt
     | IFStmt
     | WHILEStmt
     | FORStmt
+    | FunctionCallStmt
 ;
+
+FunctionCallStmt
+    : IDENT '(' FunctionArgs {processIdentifier($<s_var>1);} ')' { if (!objectFunctionCall($<s_var>1)) YYABORT; }
+;
+
+FunctionArgs
+    : FunctionArgs ',' Expression { pushFunInParm(&$<object_val>3); }
+    | Expression { pushFunInParm(&$<object_val>1); }
+    | /* Empty function argument */
 
 FORStmt
     : FOR {printf("FOR\n"); pushScope();} '(' forInit forCondition forIncrement ')' '{' StmtList '}' {dumpScope();}
@@ -263,6 +274,7 @@ PostfixExpr : PrimaryExpr { $$ = $1; }
             | '(' Expression ')' { $$ = $2; }
             | PostfixExpr INC_ASSIGN { printf("INC_ASSIGN\n"); $$ = $1; }
             | PostfixExpr DEC_ASSIGN { printf("DEC_ASSIGN\n"); $$ = $1; }
+            | FunctionCallStmt 
             ;
 
 PrimaryExpr
