@@ -118,6 +118,40 @@ Stmt
     | AssignVariableStmt
     | IFStmt
     | WHILEStmt
+    | FORStmt
+;
+
+FORStmt
+    : FOR {printf("FOR\n"); pushScope();} '(' forInit forCondition forIncrement ')' '{' StmtList '}' {dumpScope();}
+;
+
+forInit
+    : DefineVariableStmt 
+    | ';'
+;
+
+forCondition
+    : Expression ';'
+    | /* Empty for condition */
+
+forIncrement
+    : AssignVariableStmtWithoutSemi 
+    | PostfixExpr
+    | /* Empty for increment */
+;
+
+AssignVariableStmtWithoutSemi
+    : IDENT {processIdentifier($<s_var>1);} VAL_ASSIGN Expression { if (!objectExpAssign('=', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} ADD_ASSIGN Expression { if (!objectExpAssign('+', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} SUB_ASSIGN Expression { if (!objectExpAssign('-', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} MUL_ASSIGN Expression { if (!objectExpAssign('*', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} DIV_ASSIGN Expression { if (!objectExpAssign('/', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} REM_ASSIGN Expression { if (!objectExpAssign('%', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} BAN_ASSIGN Expression { if (!objectExpAssign('&', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} BOR_ASSIGN Expression { if (!objectExpAssign('|', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} BXO_ASSIGN Expression { if (!objectExpAssign('^', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} SHR_ASSIGN Expression { if (!objectExpAssign('>', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
+    | IDENT {processIdentifier($<s_var>1);} SHL_ASSIGN Expression { if (!objectExpAssign('<', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }
 ;
 
 WHILEStmt

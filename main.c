@@ -83,16 +83,8 @@ void pushVariable(ObjectType variableType, char* variableName, int variableFlag)
     printf("> Insert `%s` (addr: %ld) to scope level %d\n", variableName, variable->symbol->addr, scopeLevel);
 
     // calculate index
-    struct list_head *pos;
-    Object *obj;
-    int maxIndex = 0;
-    list_for_each(pos, scopeList[scopeLevel]) {
-        obj = list_entry(pos, Object, list);
-        if (obj->symbol->index > maxIndex) {
-            maxIndex = obj->symbol->index;
-        }
-    }
-    variable->symbol->index = maxIndex + 1;
+    variable->symbol->index = list_empty(scopeList[scopeLevel]) ? 0 : list_entry(scopeList[scopeLevel]->prev, Object, list)->symbol->index + 1;
+
     // add to scope list
     list_add_tail(&variable->list, scopeList[scopeLevel]);
 }
