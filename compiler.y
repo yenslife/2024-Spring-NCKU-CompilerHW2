@@ -85,14 +85,11 @@ DefineVariableStmt
     : VARIABLE_T { pushVariableList($1);} IdentList ';' 
 ;
 
-/* IdentArrayList
-    : IdentArrayList ',' IDENT '[' INT_LIT ']' { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_ARRAY); } */
-
 IdentList
-    : IDENT  { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_DEFAULT); }
-    | IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_DEFAULT); }
-    | IdentList ',' IDENT { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT); }
-    | IdentList ',' IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT); }
+    : IDENT  { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_DEFAULT, NULL); }
+    | IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_DEFAULT, &$<object_val>3); }
+    | IdentList ',' IDENT { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT, NULL); }
+    | IdentList ',' IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT, &$<object_val>5); }
     // array
     | IDENT '[' INT_LIT { printf("INT_LIT %d\n", (int) $<i_var>3); } ']' ArrayInitList {pushArrayVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_ARRAY, $<i_var>3);}
 ;

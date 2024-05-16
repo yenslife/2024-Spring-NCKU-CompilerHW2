@@ -78,19 +78,22 @@ void pushFunParm(ObjectType variableType, char* variableName, int variableFlag) 
     list_add_tail(&variable->list, scopeList[scopeLevel]);
 }
 
-void pushVariable(ObjectType variableType, char* variableName, int variableFlag) {
+void pushVariable(ObjectType variableType, char* variableName, int variableFlag, Object *variable) {
     // create variable object
     if (variableType == OBJECT_TYPE_UNDEFINED) {
         variableType = variableIdentType;
     }
-    Object* variable = createVariable(variableType, variableName, variableFlag);
-    printf("> Insert `%s` (addr: %ld) to scope level %d\n", variableName, variable->symbol->addr, scopeLevel);
+    if (variableType == OBJECT_TYPE_AUTO) {
+        variableType = variable->type;
+    }
+    Object* mainVariable = createVariable(variableType, variableName, variableFlag);
+    printf("> Insert `%s` (addr: %ld) to scope level %d\n", variableName, mainVariable->symbol->addr, scopeLevel);
 
     // calculate index
-    variable->symbol->index = list_empty(scopeList[scopeLevel]) ? 0 : list_entry(scopeList[scopeLevel]->prev, Object, list)->symbol->index + 1;
+    mainVariable->symbol->index = list_empty(scopeList[scopeLevel]) ? 0 : list_entry(scopeList[scopeLevel]->prev, Object, list)->symbol->index + 1;
 
     // add to scope list
-    list_add_tail(&variable->list, scopeList[scopeLevel]);
+    list_add_tail(&mainVariable->list, scopeList[scopeLevel]);
 }
 
 void pushVariableList(ObjectType varType) {
