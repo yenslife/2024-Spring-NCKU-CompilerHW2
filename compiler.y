@@ -49,6 +49,7 @@
 %type <object_val> CoutExpr
 %type <ident_list> IdentList
 %type <object_val> FunctionCallStmt
+%type <object_val> ArrayElementExpr
 
 /* Token with return */
 %token <i_var> INT_LIT
@@ -84,12 +85,28 @@ DefineVariableStmt
     : VARIABLE_T { pushVariableList($1);} IdentList ';' 
 ;
 
+/* IdentArrayList
+    : IdentArrayList ',' IDENT '[' INT_LIT ']' { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_ARRAY); } */
+
 IdentList
     : IDENT  { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_DEFAULT); }
     | IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_DEFAULT); }
     | IdentList ',' IDENT { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT); }
     | IdentList ',' IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT); }
+    // array
+    | IDENT '[' INT_LIT { printf("INT_LIT %d\n", (int) $<i_var>3); } ']' ArrayInitList {pushArrayVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_ARRAY, $<i_var>3);}
 ;
+
+ArrayInitList
+    : VAL_ASSIGN '{' ArrayElementList '}' 
+;
+
+ArrayElementList
+    : ArrayElementList ',' Expression 
+    | Expression 
+    | /* Empty array element list */  { setEmptyArray(); }
+;
+
 /* Function */
 FunctionDefStmt
     : 
@@ -121,6 +138,7 @@ Stmt
     | WHILEStmt
     | FORStmt
     | FunctionCallStmt
+    | ArrayElementExpr VAL_ASSIGN Expression { if (!objectExpAssign('=', &$<object_val>1, &$<object_val>3, &$<object_val>1)) YYABORT; }';'
 ;
 
 FunctionCallStmt
@@ -208,6 +226,10 @@ CoutExpr
 Expression : '(' Expression ')' { $$ = $2; }
            | ConditionalExpr { $$ = $1;}
            ;
+
+ArrayElementExpr
+    : IDENT '[' Expression ']' { $$ = processIdentifier($<s_var>1); }
+;
 
 ConditionalExpr : LogicalOrExpr { $$ = $1;}
                 | LogicalOrExpr '?' Expression ':' ConditionalExpr { $$ = $3; }
@@ -311,6 +333,7 @@ PrimaryExpr
         printf("BOOL_LIT %s\n", (bool) $$.value ? "TRUE" : "FALSE");
     }
     | IDENT { $$ = processIdentifier($<s_var>1);}
+    | ArrayElementExpr { $$ = $1; }
 ;
 %%
 /* C code section */

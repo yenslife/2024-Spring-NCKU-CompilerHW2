@@ -21,6 +21,8 @@ extern struct list_head *scopeList[1024]; /* scope list */
 void pushFunParm(ObjectType variableType, char* variableName, int parmFlag);
 void pushVariable(ObjectType variableType, char* variableName, int variableFlag);
 void pushVariableList(ObjectType varType);
+void pushArrayVariable(ObjectType variableType, char* variableName, int variableFlag, int arraySize);
+void setEmptyArray();
 void createFunction(ObjectType variableType, char* funcName);
 void pushFunInParm(Object* b);
 
