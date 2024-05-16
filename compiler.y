@@ -91,11 +91,17 @@ IdentList
     | IdentList ',' IDENT { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT, NULL); }
     | IdentList ',' IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>3, VAR_FLAG_DEFAULT, &$<object_val>5); }
     // array
-    | IDENT '[' INT_LIT { printf("INT_LIT %d\n", (int) $<i_var>3); } ']' ArrayInitList {pushArrayVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_ARRAY);}
+    | IDENT ArrayDimensions ArrayInitList {pushArrayVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_ARRAY);} 
+;
+
+ArrayDimensions
+    : ArrayDimensions '[' INT_LIT ']' {printf("INT_LIT %d\n", $<i_var>3);}
+    | '[' INT_LIT ']' {printf("INT_LIT %d\n", $<i_var>2);}
 ;
 
 ArrayInitList
     : VAL_ASSIGN '{' ArrayElementList '}' 
+    | /* Empty array init list, don't print create array */{ nonInitArray();}
 ;
 
 ArrayElementList
@@ -232,8 +238,13 @@ Expression : '(' Expression ')' { $$ = $2; }
            ;
 
 ArrayElementExpr
-    : IDENT '[' Expression ']' { $$ = processIdentifier($<s_var>1); }
+    : IDENT ArraySubscripts { $$ = processIdentifier($<s_var>1); }
 ;
+
+ArraySubscripts
+    : ArraySubscripts '[' Expression ']' 
+    | '[' Expression ']' 
+    | /* Empty array subscript */
 
 ConditionalExpr : LogicalOrExpr { $$ = $1;}
                 | LogicalOrExpr '?' Expression ':' ConditionalExpr { $$ = $3; }

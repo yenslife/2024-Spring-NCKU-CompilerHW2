@@ -108,7 +108,8 @@ void pushArrayVariable(ObjectType variableType, char* variableName, int variable
     }
     Object* variable = createVariable(variableType, variableName, variableFlag);
 
-    printf("create array: %d\n", arraySize);
+    if (arraySize != -1)
+        printf("create array: %d\n", arraySize);
     printf("> Insert `%s` (addr: %ld) to scope level %d\n", variableName, variable->symbol->addr, scopeLevel);
 
     // calculate index
@@ -121,6 +122,10 @@ void pushArrayVariable(ObjectType variableType, char* variableName, int variable
 
 void incrementArrayElement () {
     arraySize++;
+}
+
+void nonInitArray() {
+    arraySize = -1;
 }
 
 void createFunction(ObjectType variableType, char* funcName) {

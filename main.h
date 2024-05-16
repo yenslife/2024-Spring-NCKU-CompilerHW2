@@ -23,6 +23,7 @@ void pushVariable(ObjectType variableType, char* variableName, int variableFlag,
 void pushVariableList(ObjectType varType);
 void pushArrayVariable(ObjectType variableType, char* variableName, int variableFlag);
 void incrementArrayElement();
+void nonInitArray();
 void createFunction(ObjectType variableType, char* funcName);
 void pushFunInParm(Object* b);
 
