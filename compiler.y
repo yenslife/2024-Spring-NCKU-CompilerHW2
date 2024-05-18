@@ -82,7 +82,7 @@ GlobalStmt
 ;
 
 DefineVariableStmt
-    : VARIABLE_T { pushVariableList($1);} IdentList ';' 
+    : VARIABLE_T { pushVariableList($1);} IdentList
 ;
 
 IdentList
@@ -160,23 +160,26 @@ FORStmt
 
 LoopLogic
     : forInit forCondition forIncrement
-    // auto loop (e.g. for (auto i : arr) )
-    /* | VARIABLE_T IDENT ':' IDENT  */
+;
 
 
 forInit
-    : DefineVariableStmt 
+    : VARIABLE_T IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>2, VAR_FLAG_DEFAULT, &$<object_val>4); }';'
+    | IDENT VAL_ASSIGN Expression { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>1, VAR_FLAG_DEFAULT, &$<object_val>3); }';'
+    | VARIABLE_T IDENT  ':' { pushVariable(OBJECT_TYPE_UNDEFINED, $<s_var>2, VAR_FLAG_DEFAULT, NULL); } IDENT { processIdentifier($<s_var>5); } /* for range-based loop */
     | ';'
 ;
 
 forCondition
     : Expression ';'
+    | Expression /* for range-based loop */
+    | ';'
     | /* Empty for condition */
 
 forIncrement
     : AssignVariableStmtWithoutSemi 
     | PostfixExpr
-    | /* Empty for increment */
+    | /* Empty for increment, and for range-based loop */
 ;
 
 AssignVariableStmtWithoutSemi
